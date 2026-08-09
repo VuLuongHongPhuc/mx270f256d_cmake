@@ -31,8 +31,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <xc.h>
 #include "configuration.h"
-//#include "definitions.h"    // USB
 #include "usb_device_cdc.h"
 #include "usb_cdc.h"
 

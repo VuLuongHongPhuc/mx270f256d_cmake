@@ -13,7 +13,6 @@
 /********************************* Local variable *********************************/
 
 static TaskMainParam_t _param_task_main = {0};
-
 static TaskMonitorParam_t _param_task_monitor = {0};
 static TaskUsbParam_t _param_task_usb = {0};
 

@@ -369,7 +369,7 @@ void APP_Tasks ( void )
         case APP_STATE_INIT:
         {
             /* Let the time for USB to initialize */
-            vTaskDelay(50U / portTICK_PERIOD_MS);
+            vTaskDelay(10U / portTICK_PERIOD_MS);
 
             /* Open the device layer */
             appData.deviceHandle = USB_DEVICE_Open( USB_DEVICE_INDEX_0, DRV_IO_INTENT_READWRITE );

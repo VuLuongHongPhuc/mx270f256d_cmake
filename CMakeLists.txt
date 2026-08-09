@@ -8,18 +8,6 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain-pic32mz.cmake)
 set(DFP "D:/Program/Microchip/MPLABX/v6.20/packs/Microchip/PIC32MX_DFP/1.5.259")
 set(MCU 32MX270F256D)
 
-set(XC32_SIZE xc32-size.exe)
-find_program(XC32_SIZE_PROGRAM
-    NAMES ${XC32_SIZE}
-    PATHS
-        "${XC32_ROOT}/bin"
-)
-
-if(NOT XC32_SIZE_PROGRAM)
-    message(FATAL_ERROR "xc32-size not found")
-endif()
-
-
 project(mx270f256d_cmake C ASM)
 # set(LINKER_FILE ${CMAKE_SOURCE_DIR}/linker/p32MX270F256D.ld)
 
@@ -48,9 +36,6 @@ add_executable(${PROJECT_NAME}.elf
 target_link_libraries(${PROJECT_NAME}.elf PRIVATE 
     FreeRTOS
 )
-
-# List of compiler defines, prefix with -D compiler option
-# target_compile_definitions(${PROJECT_NAME}.elf PRIVATE    -DDEBUG)
 
 # List of include directories
 target_include_directories(${PROJECT_NAME}.elf PRIVATE
@@ -103,7 +88,7 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf
 # Generate Memory Usage Report
 add_custom_command(TARGET ${PROJECT_NAME}.elf
     POST_BUILD
-    COMMAND ${XC32_SIZE_PROGRAM}
+    COMMAND ${XC32_SIZE}
             --format=berkeley
             $<TARGET_FILE:${PROJECT_NAME}.elf>
     COMMENT "PIC32 Memory Usage:"
