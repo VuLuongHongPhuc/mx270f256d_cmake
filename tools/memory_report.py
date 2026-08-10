@@ -1,95 +1,56 @@
-#!/usr/bin/env python3
-
 import sys
 import xml.etree.ElementTree as ET
 
 
-def format_bytes(value):
-    if value < 1024:
-        return f"{value} B"
-    elif value < 1024 * 1024:
-        return f"{value / 1024:.1f} KB"
-    else:
-        return f"{value / (1024 * 1024):.1f} MB"
+def parse_int(value):
+    try:
+        return int(value.strip())
+    except Exception:
+        return 0
 
 
-def print_memory(name, used, size):
-    percent = (used * 100.0 / size) if size else 0
+def print_memory_usage(name, length, used):
+    if length <= 0:
+        print(f"{name}: missing or invalid <length> value")
+        return
 
-    print(f"{name}:")
-    print(f"  Used : {format_bytes(used)}")
-    print(f"  Total: {format_bytes(size)}")
-    print(f"  Usage: {percent:.2f} %")
-    print()
+    usage = used / float(length) * 100.0 if length > 0 else 0.0
+    print(f"{name:<10} {length:>10} {used:>10} {usage:>8.2f}%")
 
 
 def main():
-
-    if len(sys.argv) != 2:
-        print("Usage:")
-        print("  memory_report.py <memorysummary.xml>")
-        sys.exit(1)
+    if len(sys.argv) < 2:
+        print("Usage: python memory_report.py <xml-file>")
+        return 1
 
     filename = sys.argv[1]
-
+    # filename = "../build/mz2048ech064_rtos_memory.xml"
     try:
         tree = ET.parse(filename)
         root = tree.getroot()
-    except Exception as e:
-        print(f"Error reading {filename}: {e}")
-        sys.exit(1)
+    except FileNotFoundError:
+        print(f"Cannot open file: {filename}", file=sys.stderr)
+        return 1
+    except ET.ParseError as ex:
+        print(f"Failed to load XML file: {ex}", file=sys.stderr)
+        return 1
+
+    memories = root.findall('.//memory')
+    if not memories:
+        print("No <memory> elements found in XML.")
+        return 0
+
+    print(f"{'Name':<10} {'Length':>10} {'Used':>10} {'Usage':>8}")
+    print("-" * 41)
+
+    for memory in memories:
+        name = memory.get('name', 'unknown')
+        length = parse_int(memory.findtext('length'))
+        used = parse_int(memory.findtext('used'))
+        print_memory_usage(name, length, used)
+
+    return 0
 
 
-    program_used = 0
-    program_size = 0
-
-    data_used = 0
-    data_size = 0
-
-
-    # XC32 XML structure can vary slightly between versions,
-    # so search all MemoryRegion nodes.
-    for region in root.iter():
-
-        name = region.attrib.get("name", "").lower()
-
-        if "program" in name or "data" in name:
-            size = region.attrib.get("length")
-            used = region.attrib.get("used")
-
-            if used is None or size is None:
-                continue
-
-            used = int(used, 0)
-            size = int(size, 0)
-
-            if "program" in name:
-                program_used += used
-                program_size += size
-
-            elif "data" in name:
-                data_used += used
-                data_size += size
-
-
-    print("--------------------------------")
-    print(" PIC32 Memory Summary")
-    print("--------------------------------")
-
-    print_memory(
-        "Program Memory",
-        program_used,
-        program_size
-    )
-
-    print_memory(
-        "Data Memory",
-        data_used,
-        data_size
-    )
-
-    print("--------------------------------")
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    sys.exit(main())

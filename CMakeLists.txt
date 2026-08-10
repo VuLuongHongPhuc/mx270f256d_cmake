@@ -97,5 +97,7 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf
 # Generate Memory Usage Report in XML format
 add_custom_command(TARGET ${PROJECT_NAME}.elf
     POST_BUILD
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/memory_report.exe ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_memory.xml
+    COMMAND python3 
+        ${CMAKE_SOURCE_DIR}/tools/memory_report.py
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_memory.xml
 )
