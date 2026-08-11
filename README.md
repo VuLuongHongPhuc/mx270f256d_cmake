@@ -2,9 +2,6 @@
 - Base on Microchip USB CDC simple demo
 
 ## Configuration:
-- CPU 40MHz
-- Peripheral 40MHz
-- USB 48MHz
 - external EC 8MHz
 - FreeRTOS v11.1.0
 - DFP 1.5.259
@@ -16,11 +13,17 @@
 - USB Clock = 48MHz
 
 ## LED configuration:
-| Name | Port | Pin |
-|------|------|-----|
-| LED1 | RA10 | 12  |
-| LED2 | RA7  | 13  |
-| LED3 | RA8  | 32  |
+| Name | Port | Pin | Label |
+|------|------|-----|-------|
+| LED1 | RA10 | 12  | D2    |
+| LED2 | RA7  | 13  | D3    |
+| LED3 | RA8  | 32  | D4    |
+
+## 
 
 ## Note
 - Local .ld or startup.S can't force selection yet
+
+## Debug
+- with MPLAB X IDE 6.20 : can't break in freertos thread code!
+- with MDB - OK

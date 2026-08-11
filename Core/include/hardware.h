@@ -21,7 +21,7 @@ extern "C" {
 #define PULL_UP     1
 
 // *** LED ***********************************************************
-/*** Macros for LED_blue pin.12 ***/
+/*** Macros for D2 LED_blue pin.12 ***/
 #define LED_blue_Set()               (LATASET = (1<<10))
 #define LED_blue_Clear()             (LATACLR = (1<<10))
 #define LED_blue_Toggle()            (LATAINV = (1<<10))
@@ -30,7 +30,7 @@ extern "C" {
 #define LED_blue_Get()               ((PORTA >> 10) & 0x1)
 #define LED_blue_PIN                  GPIO_PIN_RA10
 
-/*** Macros for LED_green pin.13 ***/
+/*** Macros for D3 LED_green pin.13 ***/
 #define LED_green_Set()               (LATASET = (1<<7))
 #define LED_green_Clear()             (LATACLR = (1<<7))
 #define LED_green_Toggle()            (LATAINV = (1<<7))
@@ -39,7 +39,7 @@ extern "C" {
 #define LED_green_Get()               ((PORTA >> 7) & 0x1)
 #define LED_green_PIN                  GPIO_PIN_RA7
 
-/*** Macros for LED_ambre pin.32 ***/
+/*** Macros for D4 LED_ambre pin.32 ***/
 #define LED_ambre_Set()               (LATASET = (1<<8))
 #define LED_ambre_Clear()             (LATACLR = (1<<8))
 #define LED_ambre_Toggle()            (LATAINV = (1<<8))

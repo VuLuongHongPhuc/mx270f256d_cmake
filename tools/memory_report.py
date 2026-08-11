@@ -24,7 +24,7 @@ def main():
         return 1
 
     filename = sys.argv[1]
-    # filename = "../build/mz2048ech064_rtos_memory.xml"
+    # filename = "../build/mx270f256d_cmake_memory.xml"
     try:
         tree = ET.parse(filename)
         root = tree.getroot()
