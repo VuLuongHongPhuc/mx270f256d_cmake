@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24.2)
 
-# set(MCU 32MX270F256D)
+set(MCU 32MX270F256D)
 
 add_library(FreeRTOS STATIC
         MemMang/heap_4.c
@@ -13,7 +13,6 @@ add_library(FreeRTOS STATIC
         source/stream_buffer.c
         source/timers.c
         source/tasks.c
-#        source/FreeRTOS_tasks.c
 )
 
 target_include_directories(FreeRTOS PUBLIC
@@ -24,9 +23,10 @@ target_include_directories(FreeRTOS PUBLIC
 target_compile_options(FreeRTOS PRIVATE
     -mprocessor=${MCU}
     -O1
+    -g
+    -Wall
     -ffunction-sections
     -fdata-sections
-    -Wl,--gc-sections
-    -Wall
-    -fstack-usage
+#    -fstack-usage          ---> message compiler: not supported for this target
+#    -Wstack-usage=2048
 )

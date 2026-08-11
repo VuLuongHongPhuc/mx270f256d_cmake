@@ -21,32 +21,32 @@ extern "C" {
 #define PULL_UP     1
 
 // *** LED ***********************************************************
-/*** Macros for D2 LED_blue pin.12 ***/
-#define LED_blue_Set()               (LATASET = (1<<10))
-#define LED_blue_Clear()             (LATACLR = (1<<10))
-#define LED_blue_Toggle()            (LATAINV = (1<<10))
-#define LED_blue_OutputEnable()      (TRISACLR = (1<<10))
-#define LED_blue_InputEnable()       (TRISASET = (1<<10))
-#define LED_blue_Get()               ((PORTA >> 10) & 0x1)
-#define LED_blue_PIN                  GPIO_PIN_RA10
+/*** Macros for LED D2 RA10 pin.12 ***/
+#define LED_D2_Set()               (LATASET  = 1<<10)
+#define LED_D2_Clear()             (LATACLR  = 1<<10)
+#define LED_D2_Toggle()            (LATAINV  = 1<<10)
+#define LED_D2_OutputEnable()      (TRISACLR = 1<<10)
+#define LED_D2_InputEnable()       (TRISASET = 1<<10)
+#define LED_D2_Get()               ((PORTA >> 10) & 0x1)
+#define LED_D2_PIN                  GPIO_PIN_RA10
 
-/*** Macros for D3 LED_green pin.13 ***/
-#define LED_green_Set()               (LATASET = (1<<7))
-#define LED_green_Clear()             (LATACLR = (1<<7))
-#define LED_green_Toggle()            (LATAINV = (1<<7))
-#define LED_green_OutputEnable()      (TRISACLR = (1<<7))
-#define LED_green_InputEnable()       (TRISASET = (1<<7))
-#define LED_green_Get()               ((PORTA >> 7) & 0x1)
-#define LED_green_PIN                  GPIO_PIN_RA7
+/*** Macros for LED D3 RA7 pin.13 ***/
+#define LED_D3_Set()               (LATASET  = 1<<7)
+#define LED_D3_Clear()             (LATACLR  = 1<<7)
+#define LED_D3_Toggle()            (LATAINV  = 1<<7)
+#define LED_D3_OutputEnable()      (TRISACLR = 1<<7)
+#define LED_D3_InputEnable()       (TRISASET = 1<<7)
+#define LED_D3_Get()               ((PORTA >> 7) & 0x1)
+#define LED_D3_PIN                  GPIO_PIN_RA7
 
-/*** Macros for D4 LED_ambre pin.32 ***/
-#define LED_ambre_Set()               (LATASET = (1<<8))
-#define LED_ambre_Clear()             (LATACLR = (1<<8))
-#define LED_ambre_Toggle()            (LATAINV = (1<<8))
-#define LED_ambre_OutputEnable()      (TRISACLR = (1<<8))
-#define LED_ambre_InputEnable()       (TRISASET = (1<<8))
-#define LED_ambre_Get()               ((PORTA >> 8) & 0x1)
-#define LED_ambre_PIN                  GPIO_PIN_RA8
+/*** Macros for LED D4 RA8 pin.32 ***/
+#define LED_D4_Set()               (LATASET  = 1<<8)
+#define LED_D4_Clear()             (LATACLR  = 1<<8)
+#define LED_D4_Toggle()            (LATAINV  = 1<<8)
+#define LED_D4_OutputEnable()      (TRISACLR = 1<<8)
+#define LED_D4_InputEnable()       (TRISASET = 1<<8)
+#define LED_D4_Get()               ((PORTA >> 8) & 0x1)
+#define LED_D4_PIN                  GPIO_PIN_RA8
 
 
 // *** SWITCH BOUTON ***********************************************************
@@ -57,11 +57,11 @@ extern "C" {
 #define SW1_Set_pullup()    (CNPUBbits.CNPUB4=PULL_UP)
 #define SW1_port()          (PORTBbits.RB4)
 
-#define SW1_Set()               (LATBSET = (1<<4))
-#define SW1_Clear()             (LATBCLR = (1<<4))
-#define SW1_Toggle()            (LATBINV = (1<<4))
-#define SW1_OutputEnable()      (TRISBCLR = (1<<4))
-#define SW1_InputEnable()       (TRISBSET = (1<<4))
+#define SW1_Set()               (LATBSET  = 1<<4)
+#define SW1_Clear()             (LATBCLR  = 1<<4)
+#define SW1_Toggle()            (LATBINV  = 1<<4)
+#define SW1_OutputEnable()      (TRISBCLR = 1<<4)
+#define SW1_InputEnable()       (TRISBSET = 1<<4)
 #define SW1_Get()               ((PORTB>>4) & 0x1)
 #define SW1_PIN                  GPIO_PIN_RB4
 

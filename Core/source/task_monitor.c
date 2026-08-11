@@ -9,6 +9,7 @@
 /********************************* Includes ***************************************/
 
 #include <stdio.h>
+#include <stddef.h>
 #include "task_config.h"
 #include "task_monitor.h"
 #include "hardware.h"
@@ -35,7 +36,7 @@ void MonitorTask(void* parameters)
   
     while(1)
     {
-        LED_green_Toggle();
+        LED_D3_Toggle();
         vTaskDelay(1000U / portTICK_PERIOD_MS);
     }
 }

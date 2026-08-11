@@ -18,9 +18,12 @@
 
 /********************************* Macros definition ******************************/
 
-/********************************* Types definition *******************************/
+/********************************* Local variable *********************************/
 
+SYSTEM_OBJECTS sysObj;      /* ref by drv_usbfs.c */
 static uint8_t __attribute__((aligned(512))) endPointTable1[DRV_USBFS_ENDPOINTS_NUMBER * 32];
+
+/********************************* Types definition *******************************/
 
 static const DRV_USBFS_INIT drvUSBFSInit =
 {
@@ -50,18 +53,14 @@ static const DRV_USBFS_INIT drvUSBFSInit =
 
 };
 
-
-/********************************* Local variable *********************************/
-
-SYSTEM_OBJECTS sysObj;
-
 /********************************* Local functions prototype **********************/
 
 /********************************* API functions **********************************/
 
 void UsbTask(void *parameters)
 {
-    (void)parameters;
+    TaskUsbParam_t * pTaskParam = (TaskUsbParam_t*) parameters;
+    (void)pTaskParam;
 
     int count = 0;
 
@@ -81,10 +80,8 @@ void UsbTask(void *parameters)
             USB_DEVICE_Tasks(sysObj.usbDevObject0);
             count = 4;
         }
-        else
-        {
-            count --;
-        }
+        
+        count --;
 
         APP_Tasks();
     }

@@ -72,10 +72,13 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
     -mprocessor=${MCU}
     -O0
     -g
+    -Wl,--defsym=_min_heap_size=512
     -Wl,--gc-sections
+    -Wl,--no-code-in-dinit
+    -Wl,--no-dinit-in-serial-mem
     -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map
     -Wl,--memorysummary,${PROJECT_BINARY_DIR}/${PROJECT_NAME}_memory.xml
-#    -Wl,--print-memory-usage
+#    -Wl,--print-memory-usage     --> more detail on each section
     -mdfp=${DFP}
 )
 

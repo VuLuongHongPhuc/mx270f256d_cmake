@@ -37,7 +37,6 @@
 // Section: Global Data Definitions
 // *****************************************************************************
 // *****************************************************************************
-uint8_t CACHE_ALIGN switchPromptUSB[] = "\r\nPUSH BUTTON PRESSED";
 
 uint8_t CACHE_ALIGN cdcReadBuffer[APP_READ_BUFFER_SIZE];
 uint8_t CACHE_ALIGN cdcWriteBuffer[APP_READ_BUFFER_SIZE];
@@ -411,9 +410,7 @@ void APP_Tasks ( void )
                 break;
             }
 
-            /* If a read is complete, then schedule a read
-             * else wait for the current read to complete */
-
+            /* If a read is complete, then schedule a read */
             
             if(appData.isReadComplete == true)
             {
@@ -448,7 +445,6 @@ void APP_Tasks ( void )
             {
                 appData.state = APP_STATE_SCHEDULE_WRITE;
             }
-            
 
             break;
 

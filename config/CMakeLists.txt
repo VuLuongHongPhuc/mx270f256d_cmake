@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.23.1)
 
-# file(GLOB_RECURSE CONFIG_SF "${CMAKE_CURRENT_SOURCE_DIR}/source/*.c")
-
 set(CONFIG_SOURCE_FILES
-#        ${CONFIG_SF}
     config/default/exceptions.c
     config/default/freertos_hooks.c
     config/default/initialization.c

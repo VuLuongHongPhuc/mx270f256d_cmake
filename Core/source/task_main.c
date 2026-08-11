@@ -25,13 +25,13 @@
 
 void MainTask(void *parameters)
 {
-    (void)parameters;
+    TaskMainParam_t * pTaskParam = (TaskMainParam_t*) parameters;
+    (void)pTaskParam;
+
 
     while(1)
     {
-        LED_blue_Toggle();
-        vTaskDelay(10U / portTICK_PERIOD_MS);
-        LATBINV = 1 << 9; /* toggle */
+        vTaskDelay(1000U / portTICK_PERIOD_MS);
     }
 }
 
