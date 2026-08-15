@@ -218,7 +218,7 @@ void APP_USBDeviceEventHandler
             if ( configuredEventData->configurationValue == 1)
             {
                 /* Update LED to show configured state */
-                GPIO_PinSet(GPIO_PIN_RA8); /* ambre */
+                GPIO_PinSet(GPIO_PIN_RA8);
                 
                 /* Register the CDC Device application event handler here.
                  * Note how the appData object pointer is passed as the

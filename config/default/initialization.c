@@ -6,6 +6,8 @@
 #include "plib_gpio.h"
 #include "plib_evic.h"
 #include "app.h"
+#include "hardware.h"
+#include "spi2.h"
 
 /********************************* Section: Configuration Bits ********************/
 
@@ -66,6 +68,11 @@ void SYS_Initialize ( void* data )
 
 
     GPIO_Initialize();
+    
+    //SW1_InputEnable();
+    //SW1_Set_pullup();
+
+    //SPI2_Initialize();
 
 
     APP_Initialize();

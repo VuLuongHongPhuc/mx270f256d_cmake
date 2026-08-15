@@ -22,7 +22,7 @@ extern "C" {
 /********************************* Constants definition ***************************/
 
 /* Tasks Stack size */
-#define TSK_STACKSIZE_MAIN        (512)
+#define TSK_STACKSIZE_MAIN        (2048)
 #define TSK_STACKSIZE_USB         (1024)
 #define TSK_STACKSIZE_MONITOR     (256)
 
@@ -41,7 +41,7 @@ extern "C" {
 
 /* Tasks priority */
 #define TSK_PRIORITY_MAIN            PRIORITY_NORMAL
-#define TSK_PRIORITY_USB             PRIORITY_LOWEST
+#define TSK_PRIORITY_USB             PRIORITY_HIGHEST
 #define TSK_PRIORITY_MONITOR         PRIORITY_ABOVE_IDLE
 #define TSK_PRIORITY_IDLE            PRIORITY_IDLE         /* Idle task */
 

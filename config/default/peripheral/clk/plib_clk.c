@@ -90,15 +90,52 @@ void CLK_Initialize( void )
 
     /* Wait for PLL to be locked */
     while(OSCCONbits.SLOCK == 0U)
-                 {
-                      /* Nothing to do */
-                 }
+    {
+        /* Nothing to do */
+    }
 
     /* Peripheral Module Disable Configuration */
-    PMD1 = 0x1101U;
-    PMD2 = 0x7U;
-    PMD3 = 0x1f001fU;
-    PMD4 = 0x1eU;
-    PMD5 = 0x30303U;
-    PMD6 = 0x10001U;
+
+    //value |= 0x0001U; /* AD1MD */
+    //value |= 0x0100U; /* CTMUMD */
+    //value |= 0x1000U; /* CVRMD */
+    PMD1     = 0x1101U;
+
+    //value |= 0x0001U; /* CMP1MD */
+    //value |= 0x0002U; /* CMP2MD */
+    //value |= 0x0004U; /* CMP3MD */
+    PMD2     = 0x0007U;
+
+    //value |= 0x000001U; /* IC1MD */
+    //value |= 0x000002U; /* IC2MD */
+    //value |= 0x000004U; /* IC3MD */
+    //value |= 0x000008U; /* IC4MD */
+    //value |= 0x000010U; /* IC5MD */
+    //value |= 0x010000U; /* OC1MD */
+    //value |= 0x020000U; /* OC2MD */
+    //value |= 0x040000U; /* OC3MD */
+    //value |= 0x080000U; /* OC4MD */
+    //value |= 0x100000U; /* OC5MD */
+    PMD3     = 0x1f001fU;
+
+    //value |= 0x0001U; /* T1MD */
+    //value |= 0x0002U; /* T2MD */
+    //value |= 0x0004U; /* T3MD */
+    //value |= 0x0008U; /* T4MD */
+    //value |= 0x0010U; /* T5MD */
+    PMD4     = 0x001eU;
+
+    //value |= 0x0000001U; /* U1MD - UART1 */
+    //value |= 0x0000002U; /* U2MD - UART2 */
+    //value |= 0x0000100U; /* SPI1MD */
+    //value |= 0x0000200U; /* SPI2MD - use */
+    //value |= 0x0010000U; /* I2C1MD */
+    //value |= 0x0020000U; /* I2C2MD */
+    //value |= 0x1000000U; /* USB - use */
+    PMD5     = 0x0030103U;
+
+    //value |= 0x00001U; /* RTCCMD */
+    //value |= 0x00002U; /* REFOMD */
+    //value |= 0x10000U; /* PMPMD */
+    PMD6     = 0x10001U;
 }

@@ -61,33 +61,35 @@
 // *****************************************************************************
 // *****************************************************************************
 
+#if 0
+/*** Macros for LED_D2 pin ***/
+#define LED_D2_Set()               (LATASET = (1<<10))
+#define LED_D2_Clear()             (LATACLR = (1<<10))
+#define LED_D2_Toggle()            (LATAINV= (1<<10))
+#define LED_D2_OutputEnable()      (TRISACLR = (1<<10))
+#define LED_D2_InputEnable()       (TRISASET = (1<<10))
+#define LED_D2_Get()               ((PORTA >> 10) & 0x1)
+#define LED_D2_PIN                  GPIO_PIN_RA10
 
-/*** Macros for LED_B pin ***/
-#define LED_B_Set()               (LATASET = (1<<10))
-#define LED_B_Clear()             (LATACLR = (1<<10))
-#define LED_B_Toggle()            (LATAINV= (1<<10))
-#define LED_B_OutputEnable()      (TRISACLR = (1<<10))
-#define LED_B_InputEnable()       (TRISASET = (1<<10))
-#define LED_B_Get()               ((PORTA >> 10) & 0x1)
-#define LED_B_PIN                  GPIO_PIN_RA10
+/*** Macros for LED_D3 pin ***/
+#define LED_D3_Set()               (LATASET = (1<<7))
+#define LED_D3_Clear()             (LATACLR = (1<<7))
+#define LED_D3_Toggle()            (LATAINV= (1<<7))
+#define LED_D3_OutputEnable()      (TRISACLR = (1<<7))
+#define LED_D3_InputEnable()       (TRISASET = (1<<7))
+#define LED_D3_Get()               ((PORTA >> 7) & 0x1)
+#define LED_D3_PIN                  GPIO_PIN_RA7
 
-/*** Macros for LED_G pin ***/
-#define LED_G_Set()               (LATASET = (1<<7))
-#define LED_G_Clear()             (LATACLR = (1<<7))
-#define LED_G_Toggle()            (LATAINV= (1<<7))
-#define LED_G_OutputEnable()      (TRISACLR = (1<<7))
-#define LED_G_InputEnable()       (TRISASET = (1<<7))
-#define LED_G_Get()               ((PORTA >> 7) & 0x1)
-#define LED_G_PIN                  GPIO_PIN_RA7
+/*** Macros for LED_D4 pin ***/
+#define LED_D4_Set()               (LATASET = (1<<8))
+#define LED_D4_Clear()             (LATACLR = (1<<8))
+#define LED_D4_Toggle()            (LATAINV= (1<<8))
+#define LED_D4_OutputEnable()      (TRISACLR = (1<<8))
+#define LED_D4_InputEnable()       (TRISASET = (1<<8))
+#define LED_D4_Get()               ((PORTA >> 8) & 0x1)
+#define LED_D4_PIN                  GPIO_PIN_RA8
+#endif
 
-/*** Macros for LED_R pin ***/
-#define LED_R_Set()               (LATASET = (1<<8))
-#define LED_R_Clear()             (LATACLR = (1<<8))
-#define LED_R_Toggle()            (LATAINV= (1<<8))
-#define LED_R_OutputEnable()      (TRISACLR = (1<<8))
-#define LED_R_InputEnable()       (TRISASET = (1<<8))
-#define LED_R_Get()               ((PORTA >> 8) & 0x1)
-#define LED_R_PIN                  GPIO_PIN_RA8
 
 
 // *****************************************************************************

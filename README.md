@@ -20,6 +20,11 @@
 | LED2 | RA7  | 13  | D3    |
 | LED3 | RA8  | 32  | D4    |
 
+## Errata
+- RA0, RA1 when I2C1? active
+- GPIO : RB14, RA0, RA1
+- SPI1 : SCK1 (RB14)
+
 
 ## Note
 - Local .ld or startup.S can't force selection yet

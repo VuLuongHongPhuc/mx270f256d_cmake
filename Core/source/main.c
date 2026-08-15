@@ -29,8 +29,7 @@ int main(void)
 {
     SYS_Initialize ( NULL );
 
-    CreateTasks();
-    
+    CreateTasks();    
     vTaskStartScheduler();
 
     while(1)

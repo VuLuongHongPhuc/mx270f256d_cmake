@@ -20,6 +20,7 @@ extern "C" {
 #define INPUT_PIN   1
 #define PULL_UP     1
 
+
 // *** LED ***********************************************************
 /*** Macros for LED D2 RA10 pin.12 ***/
 #define LED_D2_Set()               (LATASET  = 1<<10)
@@ -65,8 +66,6 @@ extern "C" {
 #define SW1_Get()               ((PORTB>>4) & 0x1)
 #define SW1_PIN                  GPIO_PIN_RB4
 
-
-    
 
     /* Provide C++ Compatibility */
 #ifdef __cplusplus

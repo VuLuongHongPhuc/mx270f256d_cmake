@@ -60,7 +60,8 @@ void GPIO_Initialize ( void )
 {
     /* PORTA Initialization */
     LATA = 0x0; /* Initial Latch Value */
-    TRISACLR = 0x580; /* Direction Control */
+    TRISACLR = 0x580; /* Direction Control RA7, RA8, RA10 */
+                      /* No analog for RA7, RA8, RA10 */
 
     /* PORTB Initialization */
 
@@ -71,8 +72,6 @@ void GPIO_Initialize ( void )
     /* PPS Input Remapping */
 
     /* PPS Output Remapping */
-
-
 }
 
 // *****************************************************************************

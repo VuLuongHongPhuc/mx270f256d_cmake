@@ -37,7 +37,7 @@ void MonitorTask(void* parameters)
     while(1)
     {
         LED_D3_Toggle();
-        vTaskDelay(1000U / portTICK_PERIOD_MS);
+        vTaskDelay(500U / portTICK_PERIOD_MS);
     }
 }
 

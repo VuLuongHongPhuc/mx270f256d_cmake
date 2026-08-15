@@ -1,39 +1,41 @@
 cmake_minimum_required(VERSION 3.23.1)
 
 set(CONFIG_SOURCE_FILES
-    config/default/exceptions.c
-    config/default/freertos_hooks.c
-    config/default/initialization.c
-    config/default/interrupts_a.S
-    config/default/interrupts.c
-    config/default/usb_device_init_data.c
-    config/default/usb/src/usb_device_cdc_acm.c
-    config/default/usb/src/usb_device_cdc.c
-    config/default/usb/src/usb_device.c
-    config/default/system/int//src/sys_int.c
-    config/default/stdio/xc32_monitor.c
-    config/default/peripheral/clk/plib_clk.c
-    config/default/peripheral/evic/plib_evic.c
-    config/default/peripheral/gpio/plib_gpio.c
-    config/default/osal/osal_freertos.c
-    config/default/driver/usb/usbfs/src/drv_usbfs_device.c
-    config/default/driver/usb/usbfs/src/drv_usbfs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/exceptions.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/freertos_hooks.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/initialization.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/interrupts_a.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/interrupts.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb_device_init_data.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc_acm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int//src/sys_int.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/stdio/xc32_monitor.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/clk/plib_clk.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic/plib_evic.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio/plib_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal/osal_freertos.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs_device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs.c
     PARENT_SCOPE
 )
 
 set(CONFIG_INLUDE_PATH
-    default/usb
-    default/usb/src
-    default/system
-    default/system/debug
-    default/system/int
-    default/peripheral/clk
-    default/peripheral/evic
-    default/peripheral/gpio
-    default/osal
-    default/driver
-    default/driver/usb
-    default/driver/usb/usbfs
-    default/driver/usb/usbfs/src
-    default/driver/usb/usbfs/src/templates
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/debug
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/clk
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/templates
+    PARENT_SCOPE
 )

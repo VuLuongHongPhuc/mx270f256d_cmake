@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24.2)
 
 # set(CMAKE_VERBOSE_MAKEFILE True)
 
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain-pic32mz.cmake)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain-pic32mx.cmake)
 
 #Device Family Pack
 set(DFP "D:/Program/Microchip/MPLABX/v6.20/packs/Microchip/PIC32MX_DFP/1.5.259")
@@ -16,6 +16,7 @@ project(mx270f256d_cmake C ASM)
 add_subdirectory(FreeRTOS)
 add_subdirectory(Utils)
 add_subdirectory(config)
+add_subdirectory(Devices)
 
 
 set(CORE_SOURCE_FILES
@@ -24,12 +25,14 @@ set(CORE_SOURCE_FILES
     Core/source/task_main.c
     Core/source/task_usb.c
     Core/source/app.c
+    Core/source/spi2.c
 )
 
 add_executable(${PROJECT_NAME}.elf
     ${UTILS_SOURCE_FILES}
     ${CORE_SOURCE_FILES}
     ${CONFIG_SOURCE_FILES}
+    ${DEVICE_SOURCE_FILES}
 )
 
 # Link libraries to project
@@ -50,12 +53,14 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
     ${CMAKE_SOURCE_DIR}/config/default/peripheral/clk
     ${CMAKE_SOURCE_DIR}/config/default/peripheral/evic
     ${CMAKE_SOURCE_DIR}/config/default/peripheral/gpio
+    ${CMAKE_SOURCE_DIR}/config/default/peripheral/spi/spi_master
     ${CMAKE_SOURCE_DIR}/config/default/osal
     ${CMAKE_SOURCE_DIR}/config/default/driver
     ${CMAKE_SOURCE_DIR}/config/default/driver/usb
     ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs
     ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs/src
     ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs/src/templates
+    ${CMAKE_SOURCE_DIR}/Devices/ssd1306
 )
 
 target_compile_options(${PROJECT_NAME}.elf PRIVATE
@@ -67,6 +72,7 @@ target_compile_options(${PROJECT_NAME}.elf PRIVATE
     -fdata-sections
     -mdfp=${DFP}
 )
+
 
 target_link_options(${PROJECT_NAME}.elf PRIVATE
     -mprocessor=${MCU}
