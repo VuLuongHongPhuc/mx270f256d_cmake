@@ -1,5 +1,5 @@
-#ifndef _SPI_HEADER_H_
-#define _SPI_HEADER_H_
+#ifndef _SPI2_MASTER_HEADER_H_
+#define _SPI2_MASTER_HEADER_H_
 
 /********************************* Includes ***************************************/
 #include <stdint.h>
@@ -30,4 +30,4 @@ bool SPI2_WriteBytesIT(uint8_t * pBuf, size_t size);
 }
 #endif
 
-#endif /* _SPI_HEADER_H_ */
+#endif /* _SPI2_MASTER_HEADER_H_ */

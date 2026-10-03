@@ -72,22 +72,24 @@ void GPIO_Initialize ( void )
     CNCONBbits.SIDL = 0;        /* Continue operation in Idle mode */
     CNENBbits.CNIEB4 = 1;       /* CN enable interrupt on RB4 */
     IFS1CLR = _IFS1_CNBIF_MASK; /* Clear CN interrupt flag */
-    IEC1bits.CNBIE = 1;         /* Enable CN interrupt on RB */
+    IEC1SET = _IEC1_CNBIE_MASK; /* Enable CN interrupt on RB */
     IPC8bits.CNIP = 1;          /* CN interrupt priority [1..7] */
     IPC8bits.CNIS = 1;          /* CN interrupt sub priority [0..3] */
     CNCONBbits.ON = 1;          /* Enable CN on RB */
 
-    /* RB15 pin.15 output */
+    #if 0
+    /* RB15 pin.15 output also used by SPI2 */
     LATBbits.LATB15 = 0;
     TRISBbits.TRISB15 = 0;  /* as output */
     ANSELBbits.ANSB15 = 0;  /* as digital */
     ODCBbits.ODCB15 = 1;    /* as open drain output */
+    #endif
 
     /* RB14 pin.14 output */
     LATBbits.LATB14 = 0;
     TRISBbits.TRISB14 = 0;  /* as output */
     ANSELBbits.ANSB14 = 0;  /* as digital */
-    //ODCBbits.ODCB14 = 1;    /* as open drain output */
+    ODCBbits.ODCB14 = 1;    /* as open drain output */
 
     /* PORTC Initialization */
 
@@ -239,12 +241,12 @@ void __ISR(_CHANGE_NOTICE_VECTOR, IPL1AUTO) _InterruptCNBHandler(void)
         if (PORTBbits.RB4 == 0)
         {
             /* SW1 pressed */
-            LATBbits.LATB15 = 1;
+            LATBbits.LATB14 = 1;
         }
         else
         {
             /* SW1 released */
-            LATBbits.LATB15 = 0;          
+            LATBbits.LATB14 = 0;          
         }
     }
 

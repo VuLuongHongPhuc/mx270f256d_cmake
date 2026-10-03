@@ -14,6 +14,7 @@ set(CONFIG_SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic/plib_evic.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio/plib_gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/i2c/master/plib_i2c1_master.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/spi/master/plib_spi2_master.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/adc/plib_adc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/coretimer/plib_coretimer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/stdio/xc32_monitor.c
@@ -36,6 +37,7 @@ set(CONFIG_HEADER_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/i2c/master
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/spi/master
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/adc
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/coretimer
     ${CMAKE_CURRENT_SOURCE_DIR}/default/system

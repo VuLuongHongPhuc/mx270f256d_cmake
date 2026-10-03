@@ -24,8 +24,7 @@ set(CORE_SOURCE_FILES
     Core/source/task_monitor.c
     Core/source/task_main.c
     Core/source/task_usb.c
-    Core/source/app.c
-    Core/source/spi2.c
+    Core/source/app.c    
 )
 
 add_executable(${PROJECT_NAME}.elf

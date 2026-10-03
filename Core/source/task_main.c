@@ -11,12 +11,11 @@
 #include "task_main.h"
 #include <xc.h>
 #include "plib_gpio.h"
-#include "ssd1306_i2c.h"
-#include "plib_i2c1_master.h"
-#include "plib_i2c_master_common.h"
 #include "convert_to_string.h"
 #include "plib_adc.h"
-#include "led_ws2812b.h"
+#include "ssd1306_i2c.h"
+// #include "ssd1306_spi.h"
+
 
 /********************************* Constants definition ***************************/
 
@@ -29,19 +28,6 @@
 /********************************* Local variable *********************************/
 
 /********************************* Local functions ********************************/
-
-static void WS2812B_SwitchPixel(int index)
-{
-    (void)__builtin_disable_interrupts();
-
-    int shiftColor;
-    uint32_t color;
-    shiftColor = index % 3;
-    color = 0x80 << (8 * shiftColor);
-    WS2812B_SendPixel((uint8_t)color, (uint8_t)(color >> 8), (uint8_t)(color >> 16));
-    
-    (void)__builtin_enable_interrupts();
-}
 
 /********************************* API functions **********************************/
 
@@ -56,26 +42,19 @@ void MainTask(void *parameters)
     SSD1306_Display();
 
 
-    uint32_t adc_result;
+    uint32_t adc_result = 512; /* Default value for testing */
     char str[16];
     const float R1 = 10000.0f;   // Valeur de la résistance connue en Ohms (ex: 10 k +/- 10%)
     const float Vcc = 3.25f;     // Tension d'alimentation
-    
-    int iColor = 0;
     
 
     while(1)
     {
         LED_D4_Toggle();
 
-        //LATBbits.LATB15 ^= 1;
-
-        WS2812B_SwitchPixel(iColor);
-        iColor++;
-        
         vTaskDelay(1000U / portTICK_PERIOD_MS);
-
         
+        #if 1
         ADC_SamplingStart();
 
         vTaskDelay(1); /* Give time for sampling and conversion */
@@ -87,6 +66,7 @@ void MainTask(void *parameters)
         }
 
         adc_result = ADC_ResultGet(ADC_RESULT_BUFFER_0);
+        #endif
         
         SSD1306_Clear();
 

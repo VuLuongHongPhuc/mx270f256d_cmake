@@ -142,7 +142,17 @@ bool ADC_ResultIsReady(void)
     return (AD1CON1bits.DONE != 0U);
 }
 
-/* Read the conversion result */
+/**
+ * @brief Read the conversion result
+ * @param bufferNumber The buffer number to read from
+ * @return The conversion result
+ * @example
+ * <code>
+ *  ADC_SamplingStart();
+ *  while(ADC_ResultIsReady() == false) {};
+ *  uint32_t result = ADC_ResultGet(ADC_RESULT_BUFFER_0);
+ * </code>
+ */
 uint32_t ADC_ResultGet(ADC_RESULT_BUFFER bufferNumber)
 {
     return (*((&ADC1BUF0) + ((uint32_t)bufferNumber << 2)));

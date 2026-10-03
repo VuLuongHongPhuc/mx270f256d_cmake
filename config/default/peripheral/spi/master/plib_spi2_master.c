@@ -2,15 +2,13 @@
 
 /********************************* Includes ***************************************/
 
-#include <stdbool.h>
-
 #include <FreeRTOS.h>
 #include <semphr.h>
 
 #include <xc.h>
 #include <sys/attribs.h>  // IPLxAUTO, IPLxSRS, __ISR
 
-#include "spi2.h"
+#include "plib_spi2_master.h"
 
 /********************************* Constants definition ***************************/
 

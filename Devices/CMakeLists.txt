@@ -9,12 +9,13 @@ cmake_minimum_required(VERSION 3.23.1)
 
 set(DEVICE_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/ssd1306/ssd1306_i2c.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b/led_ws2812b.c
+        # ${CMAKE_CURRENT_SOURCE_DIR}/ssd1306/ssd1306_spi.c
+        # ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b/led_ws2812b.c
         PARENT_SCOPE
 )
 
 set(DEVICE_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/ssd1306
-        ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b
+        # ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b
         PARENT_SCOPE
 )

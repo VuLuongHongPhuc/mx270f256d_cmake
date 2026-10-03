@@ -7,7 +7,7 @@
 #include "plib_evic.h"
 #include "app.h"
 #include "hardware.h"
-#include "spi2.h"
+#include "plib_spi2_master.h"
 #include "plib_i2c_master_common.h"
 #include "plib_i2c1_master.h"
 #include "plib_coretimer.h"
