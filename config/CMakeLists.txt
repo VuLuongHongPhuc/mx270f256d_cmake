@@ -7,35 +7,41 @@ set(CONFIG_SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/default/interrupts_a.S
     ${CMAKE_CURRENT_SOURCE_DIR}/default/interrupts.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/usb_device_init_data.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc_acm.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int//src/sys_int.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/stdio/xc32_monitor.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs_device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal/osal_freertos.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/clk/plib_clk.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic/plib_evic.c
     ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio/plib_gpio.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal/osal_freertos.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs_device.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/drv_usbfs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/i2c/master/plib_i2c1_master.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/adc/plib_adc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/coretimer/plib_coretimer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/stdio/xc32_monitor.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int/src/sys_int.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc_acm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device_cdc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src/usb_device.c
     PARENT_SCOPE
 )
 
-set(CONFIG_INLUDE_PATH
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/system
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/debug
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/clk
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal
+set(CONFIG_HEADER_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/default
     ${CMAKE_CURRENT_SOURCE_DIR}/default/driver
     ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb
     ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs
     ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src
     ${CMAKE_CURRENT_SOURCE_DIR}/default/driver/usb/usbfs/src/templates
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/osal
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/clk
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/evic
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/gpio
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/i2c/master
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/adc
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/peripheral/coretimer
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/debug
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/system/int
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/usb/src
     PARENT_SCOPE
 )

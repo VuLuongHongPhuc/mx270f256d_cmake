@@ -47,10 +47,16 @@
     extern "C" {
 #endif
 
-#define CORE_TIMER_FREQUENCY    (20000000U)
 
-#define CORE_TIMER_INTERRUPT_PERIOD_VALUE    0x1312d00
-#define CORE_TIMER_INTERRUPT_PERIOD_IN_US     1000000
+
+/* CP0.Count counts at half the CPU rate */
+#define SYSCLOCK_HZ     (40000000U)              /* SYSCLOCK 40 MHz */
+#define CORE_TICK_HZ    (SYSCLOCK_HZ / 2)
+#define N_TICKS_PER_US  (CORE_TICK_HZ/1000000UL) /* number of tick per us => n ticks/us */
+#define N_TICKS_PER_MS  (CORE_TICK_HZ/1000UL)    /* number of tick per ms => n ticks/ms */
+
+#define CORE_TIMER_FREQUENCY    CORE_TICK_HZ
+
 
 typedef void (*CORETIMER_CALLBACK)(uint32_t status, uintptr_t context);
 
@@ -58,7 +64,7 @@ typedef struct
 {
     CORETIMER_CALLBACK  callback;
     uintptr_t           context;
-    uint32_t            tickCounter;
+    volatile uint32_t   tickCounter;
     uint32_t            period;
 } CORETIMER_OBJECT ;
 
@@ -68,9 +74,8 @@ uint32_t CORETIMER_FrequencyGet (void);
 void CORETIMER_PeriodSet (uint32_t period);
 void CORETIMER_Start(void);
 void CORETIMER_Stop(void);
-
-
-
+void CORETIMER_Reset(void);
+uint32_t CORETIMER_GetTickCount(void);
 
 void CORETIMER_DelayMs (uint32_t delay_ms);
 void CORETIMER_DelayUs (uint32_t delay_us);

@@ -24,6 +24,7 @@ extern "C" {
 
 typedef struct
 {
+    TaskHandle_t* p_task_handle;
     uint8_t      task_id;
 } TaskUsbParam_t;
 

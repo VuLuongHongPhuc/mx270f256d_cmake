@@ -20,7 +20,7 @@ extern "C" {
 #define INPUT_PIN   1
 #define PULL_UP     1
 
-
+#if 0
 // *** LED ***********************************************************
 /*** Macros for LED D2 RA10 pin.12 ***/
 #define LED_D2_Set()               (LATASET  = 1<<10)
@@ -50,7 +50,7 @@ extern "C" {
 #define LED_D4_PIN                  GPIO_PIN_RA8
 
 
-// *** SWITCH BOUTON ***********************************************************
+/*** SWITCH BOUTON ************************************************************/
 #define BTN_IGNORE_FACTOR 10
 
 //pin.33 RB4
@@ -65,7 +65,37 @@ extern "C" {
 #define SW1_InputEnable()       (TRISBSET = 1<<4)
 #define SW1_Get()               ((PORTB>>4) & 0x1)
 #define SW1_PIN                  GPIO_PIN_RB4
+#endif
 
+/*** SPI1 *********************************************************************/
+    /*
+    * NOTE: problem on SCK1 - RB14
+    */
+
+/*** SPI2 *********************************************************************/
+
+    /*
+    SPI SSD1306
+    SDI  RC6    2 --> MISO
+    SDO  RC8    4 --> MOSI
+    SCK1 RB15  15
+    RST  RB0   21
+    DC   RB1   22
+    CS   RB2   23
+    
+    TRISBCLR  = 0x8007;    // RB0, RB1, RB2, RB15 as output
+    ANSELBCLR = 0x8007;    // Digital Mode Enable
+    TRISCCLR = 1 << 8;     // RC8 as output
+    */
+
+   
+/*** I2C1 *********************************************************************/
+    /*
+    SCL  RB8  44
+    SDA  RB9   1
+
+    Pin auto config in/out and digital mode
+    */
 
     /* Provide C++ Compatibility */
 #ifdef __cplusplus

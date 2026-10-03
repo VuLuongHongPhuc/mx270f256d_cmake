@@ -8,6 +8,10 @@
 #include "app.h"
 #include "hardware.h"
 #include "spi2.h"
+#include "plib_i2c_master_common.h"
+#include "plib_i2c1_master.h"
+#include "plib_coretimer.h"
+#include "plib_adc.h"
 
 /********************************* Section: Configuration Bits ********************/
 
@@ -42,11 +46,11 @@
 #pragma config UPLLIDIV =   DIV_2
 
 /*** DEVCFG3 ***/
-#pragma config FVBUSONIO =  ON
+#pragma config FVBUSONIO =  OFF     /* Control by USB : OFF - use to control external power switch */
 #pragma config USERID =     0xffff
 #pragma config PMDL1WAY =   ON
-#pragma config IOL1WAY =    ON
-#pragma config FUSBIDIO =   ON
+#pragma config IOL1WAY =    OFF
+#pragma config FUSBIDIO =   OFF     /* Control by USB : OFF -> IO is free to use */
 
 
 
@@ -56,7 +60,6 @@ void SYS_Initialize ( void* data )
 {
     /* Start out with interrupts disabled before configuring any modules */
     (void)__builtin_disable_interrupts();
-
 
     CLK_Initialize();
 
@@ -68,11 +71,11 @@ void SYS_Initialize ( void* data )
 
 
     GPIO_Initialize();
+    CORETIMER_Initialize();
     
-    //SW1_InputEnable();
-    //SW1_Set_pullup();
-
     //SPI2_Initialize();
+    I2C1_Initialize();
+    ADC_Initialize();
 
 
     APP_Initialize();

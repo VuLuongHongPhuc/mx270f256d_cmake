@@ -39,81 +39,103 @@
 *******************************************************************************/
 
 #include "device.h"
-#include "peripheral/coretimer/plib_coretimer.h"
-#include "interrupts.h"
+#include "plib_coretimer.h"
 
+
+volatile static uint32_t _compare;
 volatile static CORETIMER_OBJECT coreTmr;
+
 void CORETIMER_Initialize(void)
 {
-    // Disable Timer by setting Disable Count (DC) bit
-    _CP0_SET_CAUSE(_CP0_GET_CAUSE() | _CP0_CAUSE_DC_MASK);
+    CORETIMER_Stop();
+
+    /* stop timer in debug mode */
     _CP0_SET_DEBUG(_CP0_GET_DEBUG() & ~_CP0_DEBUG_COUNTDM_MASK);
-    coreTmr.period=CORE_TIMER_INTERRUPT_PERIOD_VALUE;
-    coreTmr.tickCounter = 0;
+
+    /* Set period for 1 ms */
+    CORETIMER_PeriodSet(1);
+
+    CORETIMER_Reset();
+
+    /* Set interrupt priority */
+    IPC0bits.CTIP = 1; /* Interrupt priority [1..7] */
+    IPC0bits.CTIS = 0; /* Interrupt sub priority [0..3] */
+
     coreTmr.callback = NULL;
 }
+
 void CORETIMER_CallbackSet ( CORETIMER_CALLBACK callback, uintptr_t context )
 {
     coreTmr.callback = callback;
     coreTmr.context = context;
 }
+
+uint32_t CORETIMER_GetTickCount(void)
+{
+    return coreTmr.tickCounter;
+}
+
+void CORETIMER_Reset(void)
+{
+    _compare = coreTmr.period;
+    coreTmr.tickCounter = 0;
+
+    /* Clear Core Timer */
+    _CP0_SET_COUNT(0);
+    _CP0_SET_COMPARE(_compare);
+}
+
 void CORETIMER_PeriodSet ( uint32_t period )
 {
-    coreTmr.period = period;
+    coreTmr.period = period * N_TICKS_PER_MS;
 }
+
 void CORETIMER_Start(void)
 {
-    // Disable Timer by setting Disable Count (DC) bit
-    _CP0_SET_CAUSE(_CP0_GET_CAUSE() | _CP0_CAUSE_DC_MASK);
-    // Disable Interrupt
+    /* Disable Interrupt */
     IEC0CLR=0x1;
-    // Clear Core Timer
-    _CP0_SET_COUNT(0);
-    _CP0_SET_COMPARE(coreTmr.period);
-    // Enable Timer by clearing Disable Count (DC) bit
+
+    /* Clear flag */
+    IFS0CLR = 0x1;
+    
+    /* Enable Timer by clearing Disable Count (DC) bit */
     _CP0_SET_CAUSE(_CP0_GET_CAUSE() & (~_CP0_CAUSE_DC_MASK));
-    // Enable Interrupt
+    
+    /* Enable Interrupt */
     IEC0SET=0x1;
 }
+
 void CORETIMER_Stop( void )
 {
-    // Disable Timer by setting Disable Count (DC) bit
+    /* Disable Timer by setting Disable Count (DC) bit */
     _CP0_SET_CAUSE(_CP0_GET_CAUSE() | _CP0_CAUSE_DC_MASK);
-    // Disable Interrupt
+
+    /* Disable Interrupt */
     IEC0CLR=0x1;
 }
+
 uint32_t CORETIMER_FrequencyGet ( void )
 {
     return (CORE_TIMER_FREQUENCY);
 }
-void __attribute__((used)) CORE_TIMER_InterruptHandler (void)
+
+void __ISR(_CORE_TIMER_VECTOR, IPL1AUTO) _CORETIMER_InterruptHandler(void)
 {
-    uint32_t count, newCompare;
     uint32_t status = IFS0bits.CTIF;
-    IFS0CLR = 0x1;
-    // Start Critical Section
-    (void) __builtin_disable_interrupts();
-    count=_CP0_GET_COUNT();
-    newCompare=_CP0_GET_COMPARE() + coreTmr.period;
-    if (50U < newCompare-count)
-    {
-        _CP0_SET_COMPARE(newCompare);
-    }
-    else
-    {
-        _CP0_SET_COMPARE(count+50U);
-    }
-    // End Critical Section
-    (void) __builtin_enable_interrupts();
     coreTmr.tickCounter++;
     if(coreTmr.callback != NULL)
     {
         uintptr_t context = coreTmr.context;
         coreTmr.callback(status, context);
     }
+
+    /* NOTE: 50 minimum for next compare */
+    _compare += coreTmr.period;
+    _CP0_SET_COMPARE(_compare);
+
+    /* Clear flag */
+    IFS0CLR = 0x1;
 }
-
-
 
 void CORETIMER_DelayMs ( uint32_t delay_ms)
 {

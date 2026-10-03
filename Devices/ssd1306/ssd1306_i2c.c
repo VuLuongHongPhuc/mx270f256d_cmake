@@ -1,87 +1,51 @@
-/*
- * ssd1306.c
- *
- *  Created on: May 8, 2024
- *
- * Write in C for compatibility with Microchip (class not supported)
- *
- * OLED SSD1306
- * SPI config:
- *   +- MSBFISRT
- *   +- CPOL=0 (low)
- *   +- CPHA=0 (1edge)
- */
 
-
-
-
-/* Includes ------------------------------------------------------------------*/
-
+/********************************* Includes ***************************************/
 #include <string.h>
-#include "ssd1306.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+
 #include "font.h"
+#include "ssd1306_i2c.h"
+#include "plib_i2c1_master.h"
+#include "plib_i2c_master_common.h"
 
+/********************************* Constants definition ***************************/
 
-
-/* Private typedef -----------------------------------------------------------*/
-#define SPI_SSD1306
-
-
-/* Private define ------------------------------------------------------------*/
-
-
-/* Private variables ---------------------------------------------------------*/
-static int16_t _width;// Display w/h as modified by current rotation
-static int16_t _height;
-
-static InterfaceSpi_t* _interfaceSPI;
-
-static int16_t _cursor_x;
-static int16_t _cursor_y;
-static uint8_t _textcolor;
-static uint8_t _textbgcolor;
-static uint8_t _textsize;
-static uint8_t _rotation;
-
-
-static uint8_t _vccstate;
-
-
-
-static uint8_t oled_buffer[SSD1306_LCDHEIGHT * SSD1306_LCDWIDTH / 8] = {
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
-0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x80, 0x80, 0xC0, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xF8, 0xE0, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80,
-0x80, 0x80, 0x00, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0xFF,
+static uint8_t oled_buffer[SSD1306_LCDHEIGHT * SSD1306_LCDWIDTH / 8] = {                        /* 16 bytes per line */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 0 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 1 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 2 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, /* line 3 */
+0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 4 */
+0x00, 0x80, 0x80, 0xC0, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 5 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 6 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 7 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 8 */
+0x00, 0x00, 0x00, 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xF8, 0xE0, 0x00, 0x00, 0x00, 0x00, /* line 9 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, /* line 10 */
+0x80, 0x80, 0x00, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0xFF, /* line 11 */
 #if (SSD1306_LCDHEIGHT * SSD1306_LCDWIDTH > 96*16)
-0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00,
-0x80, 0xFF, 0xFF, 0x80, 0x80, 0x00, 0x80, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x80, 0x80,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, 0x8C, 0x8E, 0x84, 0x00, 0x00, 0x80, 0xF8,
-0xF8, 0xF8, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xE0, 0xE0, 0xC0, 0x80,
-0x00, 0xE0, 0xFC, 0xFE, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFE, 0xFF, 0xC7, 0x01, 0x01,
-0x01, 0x01, 0x83, 0xFF, 0xFF, 0x00, 0x00, 0x7C, 0xFE, 0xC7, 0x01, 0x01, 0x01, 0x01, 0x83, 0xFF,
-0xFF, 0xFF, 0x00, 0x38, 0xFE, 0xC7, 0x83, 0x01, 0x01, 0x01, 0x83, 0xC7, 0xFF, 0xFF, 0x00, 0x00,
-0x01, 0xFF, 0xFF, 0x01, 0x01, 0x00, 0xFF, 0xFF, 0x07, 0x01, 0x01, 0x01, 0x00, 0x00, 0x7F, 0xFF,
-0x80, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x7F, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x01, 0xFF,
-0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x03, 0x0F, 0x3F, 0x7F, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xE7, 0xC7, 0xC7, 0x8F,
-0x8F, 0x9F, 0xBF, 0xFF, 0xFF, 0xC3, 0xC0, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0xFC, 0xFC,
-0xFC, 0xFC, 0xFC, 0xFC, 0xFC, 0xF8, 0xF8, 0xF0, 0xF0, 0xE0, 0xC0, 0x00, 0x01, 0x03, 0x03, 0x03,
-0x03, 0x03, 0x01, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01,
-0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x00, 0x00,
-0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0x03,
-0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, /* line 12 */
+0x80, 0xFF, 0xFF, 0x80, 0x80, 0x00, 0x80, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x80, 0x80, /* line 13 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, 0x8C, 0x8E, 0x84, 0x00, 0x00, 0x80, 0xF8, /* line 14 */
+0xF8, 0xF8, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 15 */
+0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xF0, 0xE0, 0xE0, 0xC0, 0x80, /* line 16 */
+0x00, 0xE0, 0xFC, 0xFE, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, /* line 17 */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFE, 0xFF, 0xC7, 0x01, 0x01, /* line 18 */
+0x01, 0x01, 0x83, 0xFF, 0xFF, 0x00, 0x00, 0x7C, 0xFE, 0xC7, 0x01, 0x01, 0x01, 0x01, 0x83, 0xFF, /* line 19 */
+0xFF, 0xFF, 0x00, 0x38, 0xFE, 0xC7, 0x83, 0x01, 0x01, 0x01, 0x83, 0xC7, 0xFF, 0xFF, 0x00, 0x00, /* line 20 */
+0x01, 0xFF, 0xFF, 0x01, 0x01, 0x00, 0xFF, 0xFF, 0x07, 0x01, 0x01, 0x01, 0x00, 0x00, 0x7F, 0xFF, /* line 21 */
+0x80, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x7F, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x01, 0xFF, /* line 22 */
+0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 23 */
+0x03, 0x0F, 0x3F, 0x7F, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xE7, 0xC7, 0xC7, 0x8F, /* line 24 */
+0x8F, 0x9F, 0xBF, 0xFF, 0xFF, 0xC3, 0xC0, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0xFC, 0xFC, /* line 25 */
+0xFC, 0xFC, 0xFC, 0xFC, 0xFC, 0xF8, 0xF8, 0xF0, 0xF0, 0xE0, 0xC0, 0x00, 0x01, 0x03, 0x03, 0x03, /* line 26 */
+0x03, 0x03, 0x01, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, /* line 27 */
+0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x00, 0x00, /* line 28 */
+0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, /* line 29 */
+0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0x03, /* line 30 */
+0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* line 31 */
 #if (SSD1306_LCDHEIGHT == 64)
 0x00, 0x00, 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x3F, 0x1F, 0x0F,
 0x87, 0xC7, 0xF7, 0xFF, 0xFF, 0x1F, 0x1F, 0x3D, 0xFC, 0xF8, 0xF8, 0xF8, 0xF8, 0x7C, 0x7D, 0xFF,
@@ -119,216 +83,367 @@ static uint8_t oled_buffer[SSD1306_LCDHEIGHT * SSD1306_LCDWIDTH / 8] = {
 #endif
 };
 
-
-
-/* Private function prototypes -----------------------------------------------*/
-void SSD1306_Initialize(uint8_t vccstate, bool reset);
-void SSD1306_command(uint8_t cmd);
-
-
-
-/* Private function ---------------------------------------------------------*/
-void SSD1306_command(uint8_t cmd)
+typedef enum
 {
-	// CS HIGH
-	_interfaceSPI->CS(1);
+	DATA_TYPE = 0,
+	COMMAND_TYPE = 1,
+}MEMORY_TYPE;
 
-	// DC LOW
-	_interfaceSPI->DC(0);
+/********************************* Macros definition ******************************/
 
-	// CS LOW
-	_interfaceSPI->CS(0);
+#define CONTROL_BYTE_SIZE   1
+#define WIRE_MAX            128
+#define BUFFER_SIZE         (CONTROL_BYTE_SIZE + WIRE_MAX)
+#define SCREEN_DATA_SIZE    (SSD1306_LCDWIDTH * SSD1306_LCDHEIGHT / 8)
 
-	// Write command
-	_interfaceSPI->Write(&cmd, 1);
+/********************************* Types definition *******************************/
 
-	// CS HIGH
-	_interfaceSPI->CS(1);
-}
+typedef struct 
+{
+	int16_t cursor_x;
+	int16_t cursor_y;
+	uint8_t textcolor;
+	uint8_t textbgcolor;
+	uint8_t textsize;
+	uint8_t rotation;
+}ScreenObj_t;
 
-#if 0
-    // TODO: I2C
-    unsigned char _i2caddr 0x3D for 128x64, 0x3C for 128x32
+typedef struct
+{
+	uint8_t buffer[BUFFER_SIZE + 1];
+	uint32_t index;
+}ScreenMemory_t;
 
-    void SSD1306_command(unsigned char c) {
-        unsigned char control = 0x00;   // Co = 0, D/C = 0
-        Wire.beginTransmission(_i2caddr);
-        Wire.write(control);
-        Wire.write(c);
-        Wire.endTransmission();
+
+/********************************* Local variables ********************************/
+
+ScreenObj_t _screen = {
+	.rotation = 0,
+	.cursor_x = 0,
+	.cursor_y = 0,
+	.textsize = 1,
+	.textcolor = WHITE,
+	.textbgcolor = BLACK
+};
+
+static ScreenMemory_t _memory = {
+	.index = 0
+};
+
+static SemaphoreHandle_t _xSemaphore = NULL;
+
+/********************************* Local functions ********************************/
+
+static void I2C_Callback(uintptr_t contextHandle)
+{
+    (void)contextHandle;
+    
+	// from ISR I2C1_IsBusy
+
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR(_xSemaphore, &xHigherPriorityTaskWoken);
+	if (xHigherPriorityTaskWoken != pdFALSE)
+    {
+        portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
     }
-#endif
-
-
-
-
-/* Initialize Code -----------------------------------------------------------------*/
-
-bool SSD1306_SPI_Initialize(InterfaceSpi_t * interface)
-{
-	if (interface == NULL)
-	{
-		return false;
-	}
-
-	_interfaceSPI = interface;
-
-
-	_width = SSD1306_LCDWIDTH;
-	_height = SSD1306_LCDHEIGHT;
-
-	SSD1306_Initialize(SSD1306_SWITCHCAPVCC, 1);
-
-	return true;
 }
 
-
-void SSD1306_Initialize(uint8_t vccstate, bool reset)
+static void MemoryReset(uint8_t type)
 {
-	// pause wait display to power up
-	_interfaceSPI->Delay(200);
-
-	// set default value
-	_interfaceSPI->CS(0);
-	_interfaceSPI->DC(0);
-	_interfaceSPI->RES(0);
-
-	_rotation    = 0;
-	_cursor_x    = 0;
-	_cursor_y    = 0;
-	_textsize    = 1;
-	_textcolor   = WHITE;
-	_textbgcolor = BLACK;
-
-	_vccstate = vccstate;//SSD1306_SWITCHCAPVCC;
-
-	/* Initialize LCD */
-	if (reset)
+	if (type == COMMAND_TYPE)
 	{
-		// Set reset pin HIGH (used by both SPI and I2C)
-		_interfaceSPI->RES(1);
-
-		// VDD (3.3V) goes high at start, lets just chill for a ms
-		_interfaceSPI->Delay(1);
-
-		// bring reset LOW
-		_interfaceSPI->RES(0);
-
-		// wait 10ms
-		_interfaceSPI->Delay(10);
-
-		// bring out of reset
-		_interfaceSPI->RES(1);
-
-		// turn on VCC (9V?)
+		_memory.buffer[0] = 0x0;
 	}
-
-	// Init sequence
-	SSD1306_command(SSD1306_DISPLAYOFF);                    // 0xAE
-	SSD1306_command(SSD1306_SETDISPLAYCLOCKDIV);            // 0xD5
-	SSD1306_command(0x80);                                  // the suggested ratio 0x80
-
-	SSD1306_command(SSD1306_SETMULTIPLEX);                  // 0xA8
-	SSD1306_command(SSD1306_LCDHEIGHT - 1);
-
-	SSD1306_command(SSD1306_SETDISPLAYOFFSET);              // 0xD3
-	SSD1306_command(0x0);                                   // no offset
-	SSD1306_command(SSD1306_SETSTARTLINE | 0x0);            // line #0
-	SSD1306_command(SSD1306_CHARGEPUMP);                    // 0x8D
-	if (vccstate == SSD1306_EXTERNALVCC)
-	{ SSD1306_command(0x10); }
 	else
-	{ SSD1306_command(0x14); }
-	SSD1306_command(SSD1306_MEMORYMODE);                    // 0x20
-	SSD1306_command(0x00);                                  // 0x0 act like ks0108
-	SSD1306_command(SSD1306_SEGREMAP | 0x1);
-	SSD1306_command(SSD1306_COMSCANDEC);
+	{
+		_memory.buffer[0] = 0x40;
+	}
+	_memory.index = 1;
+}
+
+static void MemoryAdd(uint8_t value)
+{
+	_memory.buffer[_memory.index++] = value;
+}
+
+static void WriteMemory(void)
+{
+	I2C1_Write(SSD1306_I2C_ADDRESS, _memory.buffer, _memory.index);
+
+	if (xSemaphoreTake(_xSemaphore, 1000) == pdPASS)
+    {
+        /* succeed */
+    }
+}
+
+static uint8_t _vccstate = SSD1306_SWITCHCAPVCC;
+/********************************* API functions prototype ************************/
+
+void SSD1306_Initialize(void)
+{
+	_xSemaphore = xSemaphoreCreateBinary();
+    if (_xSemaphore == NULL)
+    {
+        /* Create failed */
+    }
+
+	I2C1_CallbackRegister(I2C_Callback, (uintptr_t) 0 );
+
+	// pause wait display to power up
+	vTaskDelay(100U);
+
+	/* No command reset screen with I2C */
+
+	MemoryReset(COMMAND_TYPE); /* reset for command */
+	
+	// Init sequence
+	MemoryAdd(SSD1306_DISPLAYOFF);                    // 0xAE
+	MemoryAdd(SSD1306_SETDISPLAYCLOCKDIV);            // 0xD5
+	MemoryAdd(0x80);                                  // the suggested ratio 0x80
+
+	MemoryAdd(SSD1306_SETMULTIPLEX);                  // 0xA8
+	MemoryAdd(SSD1306_LCDHEIGHT - 1);
+
+	MemoryAdd(SSD1306_SETDISPLAYOFFSET);              // 0xD3
+	MemoryAdd(0x0);                                   // no offset
+	MemoryAdd(SSD1306_SETSTARTLINE | 0x0);            // line #0
+	MemoryAdd(SSD1306_CHARGEPUMP);                    // 0x8D
+	if (_vccstate == SSD1306_EXTERNALVCC)
+	{
+		MemoryAdd(0x10);
+	}
+	else
+	{
+		MemoryAdd(0x14);
+	}
+	MemoryAdd(SSD1306_MEMORYMODE);                    // 0x20
+	MemoryAdd(0x00);                                  // 0x0 act like ks0108
+	MemoryAdd(SSD1306_SEGREMAP | 0x1);
+	MemoryAdd(SSD1306_COMSCANDEC);
 
 	#if defined SSD1306_128_32
-	SSD1306_command(SSD1306_SETCOMPINS);                    // 0xDA
-	SSD1306_command(0x02);
-	SSD1306_command(SSD1306_SETCONTRAST);                   // 0x81
-	SSD1306_command(0x8F);
+	MemoryAdd(SSD1306_SETCOMPINS);                    // 0xDA
+	MemoryAdd(0x02);
+	MemoryAdd(SSD1306_SETCONTRAST);                   // 0x81
+	MemoryAdd(0x8F);
 
 	#elif defined SSD1306_128_64
-	SSD1306_command(SSD1306_SETCOMPINS);                    // 0xDA
-	SSD1306_command(0x12);
-	SSD1306_command(SSD1306_SETCONTRAST);                   // 0x81
-	if (vccstate == SSD1306_EXTERNALVCC)
-	{ SSD1306_command(0x9F); }
+	MemoryAdd(SSD1306_SETCOMPINS);                    // 0xDA
+	MemoryAdd(0x12);
+	MemoryAdd(SSD1306_SETCONTRAST);                   // 0x81
+	if (_vccstate == SSD1306_EXTERNALVCC)
+	{
+		MemoryAdd(0x9F);
+	}
 	else
-	{ SSD1306_command(0xCF); }
+	{
+		MemoryAdd(0xCF);
+	}
 
 	#elif defined SSD1306_96_16
-	SSD1306_command(SSD1306_SETCOMPINS);                    // 0xDA
-	SSD1306_command(0x2);   //ada x12
-	SSD1306_command(SSD1306_SETCONTRAST);                   // 0x81
-	if (vccstate == SSD1306_EXTERNALVCC)
-	{ SSD1306_command(0x10); }
+	MemoryAdd(SSD1306_SETCOMPINS);                    // 0xDA
+	MemoryAdd(0x2);   //ada x12
+	MemoryAdd(SSD1306_SETCONTRAST);                   // 0x81
+	if (_vccstate == SSD1306_EXTERNALVCC)
+	{
+		MemoryAdd(0x10);
+	}
 	else
-	{ SSD1306_command(0xAF); }
+	{
+		MemoryAdd(0xAF);
+	}
 
 	#endif
 
-	SSD1306_command(SSD1306_SETPRECHARGE);                  // 0xd9
-	if (vccstate == SSD1306_EXTERNALVCC)
-	{ SSD1306_command(0x22); }
+	MemoryAdd(SSD1306_SETPRECHARGE);                  // 0xd9
+	if (_vccstate == SSD1306_EXTERNALVCC)
+	{
+		MemoryAdd(0x22);
+	}
 	else
-	{ SSD1306_command(0xF1); }
-	SSD1306_command(SSD1306_SETVCOMDETECT);                 // 0xDB
-	SSD1306_command(0x40);
-	SSD1306_command(SSD1306_DISPLAYALLON_RESUME);           // 0xA4
-	SSD1306_command(SSD1306_NORMALDISPLAY);                 // 0xA6
+	{
+		MemoryAdd(0xF1);
+	}
+	MemoryAdd(SSD1306_SETVCOMDETECT);                 // 0xDB
+	MemoryAdd(0x40);
+	MemoryAdd(SSD1306_DISPLAYALLON_RESUME);           // 0xA4
+	MemoryAdd(SSD1306_NORMALDISPLAY);                 // 0xA6
 
-	SSD1306_command(SSD1306_DEACTIVATE_SCROLL);
+	MemoryAdd(SSD1306_DEACTIVATE_SCROLL);
 
-	SSD1306_command(SSD1306_DISPLAYON);//--turn on oled panel
+	MemoryAdd(SSD1306_DISPLAYON);//--turn on oled panel
+
+	WriteMemory();
 }
 
-
-
-
-
-/* Global --------------------------------------------------------------------*/
 void SSD1306_Display(void)
 {
-	SSD1306_command(SSD1306_COLUMNADDR);
-	SSD1306_command(0);   // Column start address (0 = reset)
-	SSD1306_command(SSD1306_LCDWIDTH-1); // Column end address (127 = reset)
+	MemoryReset(COMMAND_TYPE);
 
-	SSD1306_command(SSD1306_PAGEADDR);
-	SSD1306_command(0); // Page start address (0 = reset)
+	MemoryAdd(SSD1306_COLUMNADDR);
+	MemoryAdd(0);   // Column start address (0 = reset)
+	MemoryAdd(SSD1306_LCDWIDTH-1); // Column end address (127 = reset)
+
+	MemoryAdd(SSD1306_PAGEADDR);
+	MemoryAdd(0); // Page start address (0 = reset)
 	#if SSD1306_LCDHEIGHT == 64
-	  SSD1306_command(7); // Page end address
+	  MemoryAdd(7); // Page end address
 	#endif
 	#if SSD1306_LCDHEIGHT == 32
-	  SSD1306_command(3); // Page end address
+	  MemoryAdd(3); // Page end address
 	#endif
 	#if SSD1306_LCDHEIGHT == 16
-	  SSD1306_command(1); // Page end address
+	  MemoryAdd(1); // Page end address
 	#endif
 
+	WriteMemory();
 
-
-	_interfaceSPI->CS(1); // HIGH
-	_interfaceSPI->DC(1); // HIGH
-	_interfaceSPI->CS(0); // LOW
-
-	_interfaceSPI->Write(oled_buffer, (SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT)/8);
-
-	_interfaceSPI->CS(1); // HIGH
+    //vTaskDelay(1000);
+	
+	/*** screen data */
+	int i = 0;
+    int n = 0;
+    
+    do{
+        if (n == WIRE_MAX)
+        {
+            WriteMemory();
+            
+            n = 0;
+        }
+        
+        if (n == 0)
+        {
+            MemoryReset(DATA_TYPE);
+        }
+        
+        _memory.buffer[_memory.index++] = oled_buffer[i];
+        
+        n++;
+        i++;
+    }while(i < SCREEN_DATA_SIZE);
+    
+    WriteMemory(); /* last write */
 }
 
 void SSD1306_DisplayOnOff(bool onoff)
 {
     if (onoff)
     {
-    	SSD1306_command(SSD1306_DISPLAYON);//--turn on oled panel
+		MemoryReset(COMMAND_TYPE);
+    	MemoryAdd(SSD1306_DISPLAYON);  /* turn on oled panel */
+		WriteMemory();
     }
     else
     {
-    	SSD1306_command(SSD1306_DISPLAYOFF);//--turn off oled panel --> sleep mode
+		MemoryReset(COMMAND_TYPE);
+    	MemoryAdd(SSD1306_DISPLAYOFF); /* turn off oled panel => sleep mode */
+		WriteMemory();
     }
+}
+
+void SSD1306_Invert(bool invert)
+{
+    MemoryReset(COMMAND_TYPE);
+    if (invert)
+    {
+        MemoryAdd(SSD1306_INVERTDISPLAY);
+    }
+    else
+    {
+        MemoryAdd(SSD1306_NORMALDISPLAY);
+    }
+    WriteMemory();
+}
+
+void SSD1306_Clear(void)
+{
+    memset(oled_buffer, 0, (SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8));
+}
+
+// startscrollright
+// Activate a right handed scroll for rows start through stop
+// Hint, the display is 16 rows tall. To scroll the whole display, run:
+// display.scrollright(0x00, 0x0F)
+void startscrollright(uint8_t start, uint8_t stop)
+{
+    MemoryReset(COMMAND_TYPE);
+
+    MemoryAdd(SSD1306_RIGHT_HORIZONTAL_SCROLL);
+    MemoryAdd(0x00);
+    MemoryAdd(start);
+    MemoryAdd(0x00);
+    MemoryAdd(stop);
+    MemoryAdd(0x00);
+    MemoryAdd(0xFF);
+    MemoryAdd(SSD1306_ACTIVATE_SCROLL);
+
+    WriteMemory();
+}
+
+// startscrollleft
+// Activate a right handed scroll for rows start through stop
+// Hint, the display is 16 rows tall. To scroll the whole display, run:
+// display.scrollright(0x00, 0x0F)
+void startscrollleft(uint8_t start, uint8_t stop)
+{
+    MemoryReset(COMMAND_TYPE);
+
+    MemoryAdd(SSD1306_LEFT_HORIZONTAL_SCROLL);
+    MemoryAdd(0x00);
+    MemoryAdd(start);
+    MemoryAdd(0x00);
+    MemoryAdd(stop);
+    MemoryAdd(0x00);
+    MemoryAdd(0xFF);
+    MemoryAdd(SSD1306_ACTIVATE_SCROLL);
+
+    WriteMemory();
+}
+
+
+// startscrolldiagright
+// Activate a diagonal scroll for rows start through stop
+// Hint, the display is 16 rows tall. To scroll the whole display, run:
+// display.scrollright(0x00, 0x0F)
+void startscrolldiagright(uint8_t start, uint8_t stop)
+{
+    MemoryReset(COMMAND_TYPE);
+
+    MemoryAdd(SSD1306_SET_VERTICAL_SCROLL_AREA);
+    MemoryAdd(0x00);
+    MemoryAdd(SSD1306_LCDHEIGHT);
+    MemoryAdd(SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL);
+    MemoryAdd(0x00);
+    MemoryAdd(start);
+    MemoryAdd(0x00);
+    MemoryAdd(stop);
+    MemoryAdd(0x01);
+    MemoryAdd(SSD1306_ACTIVATE_SCROLL);
+
+    WriteMemory();
+}
+
+// startscrolldiagleft
+// Activate a diagonal scroll for rows start through stop
+// Hint, the display is 16 rows tall. To scroll the whole display, run:
+// display.scrollright(0x00, 0x0F)
+void startscrolldiagleft(uint8_t start, uint8_t stop)
+{
+    MemoryReset(COMMAND_TYPE);
+
+    MemoryAdd(SSD1306_SET_VERTICAL_SCROLL_AREA);
+    MemoryAdd(0x00);
+    MemoryAdd(SSD1306_LCDHEIGHT);
+    MemoryAdd(SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL);
+    MemoryAdd(0x00);
+    MemoryAdd(start);
+    MemoryAdd(0x00);
+    MemoryAdd(stop);
+    MemoryAdd(0x01);
+    MemoryAdd(SSD1306_ACTIVATE_SCROLL);
+
+    WriteMemory();
 }
 
 void SSD1306_Dim(bool dim)
@@ -350,121 +465,37 @@ void SSD1306_Dim(bool dim)
             contrast = 0xCF;
         }
     }
+    
+    MemoryReset(COMMAND_TYPE);
     // the range of contrast to too small to be really useful
     // it is useful to dim the display
-    SSD1306_command(SSD1306_SETCONTRAST);
-    SSD1306_command(contrast);
+    MemoryAdd(SSD1306_SETCONTRAST);
+    MemoryAdd(contrast);
+    WriteMemory();
 }
-
-/* Clear buffer */
-void SSD1306_Clear(void)
-{
-	memset(oled_buffer, 0, (SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8));
-}
-
-/* Invert screen */
-void SSD1306_Invert(bool invert)
-{
-  if (invert)
-  {
-    SSD1306_command(SSD1306_INVERTDISPLAY);
-  }
-  else
-  {
-    SSD1306_command(SSD1306_NORMALDISPLAY);
-  }
-}
-
-
-// startscrollright
-// Activate a right handed scroll for rows start through stop
-// Hint, the display is 16 rows tall. To scroll the whole display, run:
-// display.scrollright(0x00, 0x0F)
-void startscrollright(uint8_t start, uint8_t stop)
-{
-  SSD1306_command(SSD1306_RIGHT_HORIZONTAL_SCROLL);
-  SSD1306_command(0x00);
-  SSD1306_command(start);
-  SSD1306_command(0x00);
-  SSD1306_command(stop);
-  SSD1306_command(0x00);
-  SSD1306_command(0xFF);
-  SSD1306_command(SSD1306_ACTIVATE_SCROLL);
-}
-
-
-// startscrollleft
-// Activate a right handed scroll for rows start through stop
-// Hint, the display is 16 rows tall. To scroll the whole display, run:
-// display.scrollright(0x00, 0x0F)
-void startscrollleft(uint8_t start, uint8_t stop)
-{
-  SSD1306_command(SSD1306_LEFT_HORIZONTAL_SCROLL);
-  SSD1306_command(0x00);
-  SSD1306_command(start);
-  SSD1306_command(0x00);
-  SSD1306_command(stop);
-  SSD1306_command(0x00);
-  SSD1306_command(0xFF);
-  SSD1306_command(SSD1306_ACTIVATE_SCROLL);
-}
-
-// startscrolldiagright
-// Activate a diagonal scroll for rows start through stop
-// Hint, the display is 16 rows tall. To scroll the whole display, run:
-// display.scrollright(0x00, 0x0F)
-void startscrolldiagright(uint8_t start, uint8_t stop)
-{
-  SSD1306_command(SSD1306_SET_VERTICAL_SCROLL_AREA);
-  SSD1306_command(0x00);
-  SSD1306_command(SSD1306_LCDHEIGHT);
-  SSD1306_command(SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL);
-  SSD1306_command(0x00);
-  SSD1306_command(start);
-  SSD1306_command(0x00);
-  SSD1306_command(stop);
-  SSD1306_command(0x01);
-  SSD1306_command(SSD1306_ACTIVATE_SCROLL);
-}
-
-// startscrolldiagleft
-// Activate a diagonal scroll for rows start through stop
-// Hint, the display is 16 rows tall. To scroll the whole display, run:
-// display.scrollright(0x00, 0x0F)
-void startscrolldiagleft(uint8_t start, uint8_t stop)
-{
-  SSD1306_command(SSD1306_SET_VERTICAL_SCROLL_AREA);
-  SSD1306_command(0x00);
-  SSD1306_command(SSD1306_LCDHEIGHT);
-  SSD1306_command(SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL);
-  SSD1306_command(0x00);
-  SSD1306_command(start);
-  SSD1306_command(0x00);
-  SSD1306_command(stop);
-  SSD1306_command(0x01);
-  SSD1306_command(SSD1306_ACTIVATE_SCROLL);
-}
-
 
 void SSD1306_DrawPixel(int16_t x, int16_t y, uint8_t color)
 {
-	if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height))
+	if ( (x < 0) || (x >= SSD1306_LCDWIDTH) ||
+         (y < 0) || (y >= SSD1306_LCDHEIGHT))
+    {
 		return;
+    }
 
 	// check _rotation, move pixel around if necessary
-	switch (_rotation)
+	switch (_screen.rotation)
 	{
 		case 1:
 			_swap(x, y);
-			x = _width - x - 1;
+			x = SSD1306_LCDWIDTH - x - 1;
 			break;
 		case 2:
-			x = _width - x - 1;
-			y = _height - y - 1;
+			x = SSD1306_LCDWIDTH - x - 1;
+			y = SSD1306_LCDHEIGHT - y - 1;
 			break;
 		case 3:
 			_swap(x, y);
-			y = _height - y - 1;
+			y = SSD1306_LCDHEIGHT - y - 1;
 			break;
 
 		default: break;
@@ -473,20 +504,26 @@ void SSD1306_DrawPixel(int16_t x, int16_t y, uint8_t color)
 	// x is which column
 	switch (color)
 	{
-		case WHITE:   oled_buffer[x+ (y/8)*SSD1306_LCDWIDTH] |=  (1 << (y&7)); break;
-		case BLACK:   oled_buffer[x+ (y/8)*SSD1306_LCDWIDTH] &= ~(1 << (y&7)); break;
-		case INVERSE: oled_buffer[x+ (y/8)*SSD1306_LCDWIDTH] ^=  (1 << (y&7)); break;
+		case WHITE:
+            oled_buffer[x + (y/8) * SSD1306_LCDWIDTH] |=  1 << (y & 7);
+            break;
+		case BLACK:
+            oled_buffer[x + (y/8) * SSD1306_LCDWIDTH] &= ~(1 << (y & 7));
+            break;
+		case INVERSE:
+            oled_buffer[x + (y/8) * SSD1306_LCDWIDTH] ^=  1 << (y & 7);
+            break;
 	}
 }
-
 
 void SSD1306_DrawFastVLine(int32_t x, int32_t y, int32_t h, uint8_t color)
 {
 	bool bSwap = false;
-	switch(_rotation)
+	switch(_screen.rotation)
 	{
 		case 0:
 		  break;
+          
 		case 1:
 		  // 90 degree _rotation, swap x & y for _rotation, then invert x and adjust x for h (now to become w)
 		  bSwap = true;
@@ -494,18 +531,23 @@ void SSD1306_DrawFastVLine(int32_t x, int32_t y, int32_t h, uint8_t color)
 		  x = SSD1306_LCDWIDTH - x - 1;
 		  x -= (h-1);
 		  break;
+          
 		case 2:
 		  // 180 degree _rotation, invert x and y - then shift y around for height.
 		  x = SSD1306_LCDWIDTH - x - 1;
 		  y = SSD1306_LCDHEIGHT - y - 1;
 		  y -= (h-1);
 		  break;
+          
 		case 3:
 		  // 270 degree _rotation, swap x & y for _rotation, then invert y
 		  bSwap = true;
 		  _swap(x, y);
 		  y = SSD1306_LCDHEIGHT - y - 1;
 		  break;
+          
+        default:
+            break;
 	}
 
 	if(bSwap)
@@ -518,28 +560,30 @@ void SSD1306_DrawFastVLine(int32_t x, int32_t y, int32_t h, uint8_t color)
 	}
 }
 
-
 void SSD1306_DrawFastHLine(int32_t x, int32_t y, int32_t w, uint8_t color)
 {
 	bool bSwap = false;
-	switch(_rotation)
+	switch(_screen.rotation)
 	{
 		default:
 		case 0:
 			// 0 degree _rotation, do nothing
 			break;
+            
 		case 1:
 			// 90 degree _rotation, swap x & y for _rotation, then invert x
 			bSwap = true;
 			_swap(x, y);
 			x = SSD1306_LCDWIDTH - x - 1;
 			break;
+            
 		case 2:
 			// 180 degree _rotation, invert x and y - then shift y around for height.
 			x = SSD1306_LCDWIDTH - x - 1;
 			y = SSD1306_LCDHEIGHT - y - 1;
 			x -= (w-1);
 			break;
+            
 		case 3:
 			// 270 degree _rotation, swap x & y for _rotation, then invert y  and adjust y for w (not to become h)
 			bSwap = true;
@@ -558,7 +602,6 @@ void SSD1306_DrawFastHLine(int32_t x, int32_t y, int32_t w, uint8_t color)
 		SSD1306_DrawFastHLineInternal(x, y, w, color);
 	}
 }
-
 
 void SSD1306_DrawFastHLineInternal(int32_t x, int32_t y, int32_t w, uint8_t color)
 {
@@ -592,13 +635,30 @@ void SSD1306_DrawFastHLineInternal(int32_t x, int32_t y, int32_t w, uint8_t colo
 
 	switch (color)
 	{
-	default:
-		case WHITE:         while(w--) { *pBuf++ |= mask; }; break;
-		case BLACK: mask = ~mask;   while(w--) { *pBuf++ &= mask; }; break;
-		case INVERSE:         while(w--) { *pBuf++ ^= mask; }; break;
+        default:
+		case WHITE:
+            while(w--)
+            {
+                *pBuf++ |= mask;
+            };
+            break;
+            
+		case BLACK:
+            mask = ~mask;
+            while(w--)
+            {
+                *pBuf++ &= mask;
+            };
+            break;
+            
+		case INVERSE:
+            while(w--)
+            {
+                *pBuf++ ^= mask;
+            };
+            break;
 	}
 }
-
 
 void SSD1306_DrawFastVLineInternal(int32_t x, int32_t __y, int32_t __h, uint8_t color)
 {
@@ -733,8 +793,6 @@ void SSD1306_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t co
     }
 }
 
-
-
 // Bresenham's algorithm - thx wikpedia
 void SSD1306_WriteLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 {
@@ -797,7 +855,6 @@ void SSD1306_FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t color)
     }
 }
 
-
 // Draw a rectangle
 void SSD1306_DrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t color)
 {
@@ -845,9 +902,7 @@ void SSD1306_DrawCircle(int16_t x, int16_t y, int16_t r, uint8_t color)
         SSD1306_DrawPixel(x + y_circle, y - x_circle, color);
         SSD1306_DrawPixel(x - y_circle, y - x_circle, color);
     }
-
 }
-
 
 void SSD1306_FillCircle(int16_t x, int16_t y, int16_t radius, uint8_t color)
 {
@@ -906,7 +961,6 @@ void SSD1306_DrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r
 	SSD1306_DrawCircleHelper(x+r    , y+h-r-1, r, 8, color);
 }
 
-
 void SSD1306_DrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint8_t color)
 {
     int16_t f     = 1 - r;
@@ -946,7 +1000,6 @@ void SSD1306_DrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t corner
         }
     }
 }
-
 
 // Draw a triangle
 void SSD1306_DrawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color)
@@ -1040,80 +1093,58 @@ void SSD1306_FillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_
         if(a > b) _swap_int16_t(a,b);
         SSD1306_DrawFastHLine(a, y, b-a+1, color);
     }
-
 }
 
 
-
-/* Text Code ----------------------------------------------------------------------*/
+/*** Section texte */
 
 void SSD1306_SetTextSize(uint8_t s)
 {
-    _textsize = (s > 0) ? s : 1;
+    _screen.textsize = (s > 0) ? s : 1;
 }
 
 void SSD1306_SetTextColor(uint8_t color)
 {
-    _textcolor = color;
+    _screen.textcolor = color;
 
     // the background is always oppose
     if (color == WHITE)
-    	_textbgcolor = BLACK;
+    	_screen.textbgcolor = BLACK;
     else
-    	_textbgcolor = WHITE;
+    	_screen.textbgcolor = WHITE;
 }
 
 void SSD1306_SetCursor(int16_t x, int16_t y)
 {
-    _cursor_x = x;
-    _cursor_y = y;
-}
-
-void SSD1306_WriteChar(uint8_t c)
-{
-    // 'Classic' built-in font
-
-	// Newline?
-    if(c == '\n')
-    {
-        _cursor_x  = 0;                     // Reset x to zero,
-        _cursor_y += _textsize * 8;          // advance y one line
-    }
-    // Ignore carriage returns
-    else if(c != '\r')
-    {
-        //if(wrap && ((_cursor_x + _textsize * 6) > _width)) { // Off right?
-        if ((_cursor_x + _textsize * 6) > _width)
-        { // Off right?
-            _cursor_x  = 0;                 // Reset x to zero,
-            _cursor_y += _textsize * 8;      // advance y one line
-        }
-        SSD1306_DrawChar(_cursor_x, _cursor_y, c, _textcolor, _textbgcolor, _textsize);
-        _cursor_x += _textsize * 6;          // Advance x one char
-    }
+    _screen.cursor_x = x;
+    _screen.cursor_y = y;
 }
 
 // Draw a character
-void SSD1306_DrawChar(int16_t x, int16_t y, uint8_t c, uint8_t color, uint16_t bg, uint8_t size)
+bool SSD1306_DrawChar(int16_t x, int16_t y, uint8_t c, uint8_t color, uint16_t bg, uint8_t size)
 {
+	if ((x > (SSD1306_LCDWIDTH-6))  || // Clip right
+		(y > (SSD1306_LCDHEIGHT-8)) || // Clip bottom
+		((x + 6 * size - 1) < 0)    || // Clip left
+		((y + 8 * size - 1) < 0))      // Clip top
+    {
+        return false;
+    }
 
-	uint8_t i,j;
-	uint8_t line; // -> vertical line
-
-	if ((x >= _width)            || // Clip right
-		(y >= _height)           || // Clip bottom
-		((x + 6 * size - 1) < 0) || // Clip left
-		((y + 8 * size - 1) < 0))   // Clip top
-	return;
-
-	for (i=0; i<6; i++ ) // -> vertical
+    int j;
+    uint8_t line = 0; // -> vertical line
+	for (int i=0; i<6; i++ ) // -> vertical
 	{
 		if (i == 5)
+        {
 			line = 0x0;
+        }
 		else
-			line = *(font+(c*5)+i);
+        {
+			line = *(font + (c * 5) + i);
+        }
 
-		for ( j = 0; j<8; j++) // j -> byte of line = 8
+		for (j = 0; j<8; j++) // j -> byte of line = 8
 		{
 			if (line & 0x1)
 			{
@@ -1139,62 +1170,51 @@ void SSD1306_DrawChar(int16_t x, int16_t y, uint8_t c, uint8_t color, uint16_t b
 			line >>= 1;
 		}
 	}
+    
+    return true;
 }
 
-
-
-/* Custom ----------------------------------------------------------*/
-
+/*** Custom section */
 void SSD1306_Println(const char* str)
 {
     while(*str != '\0')
     {
-    	SSD1306_DrawChar(_cursor_x, _cursor_y, *(str++), _textcolor, _textbgcolor, _textsize);
-        _cursor_x += _textsize*6;
+    	SSD1306_DrawChar(   _screen.cursor_x,
+                            _screen.cursor_y,
+                            *(str++),
+                            _screen.textcolor,
+                            _screen.textbgcolor,
+                            _screen.textsize);
+        
+        _screen.cursor_x += _screen.textsize * 6;
     }
 
-    _cursor_y += _textsize*8;
-    _cursor_x = 0;
+    _screen.cursor_y += _screen.textsize * 8;
+    _screen.cursor_x = 0;
 }
 
-void ssd1306_select_page(unsigned char index)
+void SSD1306_OutputText(const char* str)
 {
-    // une page = 8 lignes
-
-	SSD1306_command(SSD1306_COLUMNADDR);
-    SSD1306_command(0);   // Column start address (0 = reset)
-    SSD1306_command(SSD1306_LCDWIDTH-1); // Column end address (127 = reset)
-
-    SSD1306_command(SSD1306_PAGEADDR);
-    SSD1306_command(0); // Page start address (0 = reset)
-    SSD1306_command(7); // Page end address
-    /*
-    #if SSD1306_LCDHEIGHT == 64
-    if(index < 8 ){
-    #endif
-    #if SSD1306_LCDHEIGHT == 32
-    if(index < 4 ){
-    #endif
-    #if SSD1306_LCDHEIGHT == 16
-    if(index < 2 ){
-    #endif
-
-        page_index = index;
+    while(*str != '\0')
+    {
+        if (*str == '\n')
+        {
+            _screen.cursor_y += _screen.textsize * 8;
+            _screen.cursor_x = 0;
+            
+            continue;
+        }
+        
+    	if (SSD1306_DrawChar(_screen.cursor_x, _screen.cursor_y, *(str++), \
+                            _screen.textcolor, _screen.textbgcolor, _screen.textsize))
+        {
+            _screen.cursor_x += _screen.textsize * 6;
+        }
+        else
+        {
+            break;
+        }
     }
-    else {
-        page_index = 0;
-    }
-
-    SSD1306_command(page_index); // Page start address (0 = reset)
-    SSD1306_command(page_index+1); dress
-     */
 }
-
-
-
-
-
-
 
 /*EOF*/
-

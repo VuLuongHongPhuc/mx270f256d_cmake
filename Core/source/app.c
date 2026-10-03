@@ -218,7 +218,7 @@ void APP_USBDeviceEventHandler
             if ( configuredEventData->configurationValue == 1)
             {
                 /* Update LED to show configured state */
-                GPIO_PinSet(GPIO_PIN_RA8);
+                LED_D2_Set();
                 
                 /* Register the CDC Device application event handler here.
                  * Note how the appData object pointer is passed as the
@@ -382,44 +382,41 @@ void APP_Tasks ( void )
             }
             else
             {
-                /* The Device Layer is not ready to be opened. We should try
-                 * again later. */
+                /* The Device Layer is not ready to be opened. We should try again later. */
             }
-       
-            break;
-        }
+        }break;
 
         /* USER: implement your application state machine.*/
         
         
         case APP_STATE_WAIT_FOR_CONFIGURATION:
-
+        {
             /* Check if the device was configured */
             if(appData.isConfigured)
             {
                 /* If the device is configured then lets start reading */
                 appData.state = APP_STATE_SCHEDULE_READ;
             }
-            
-            break;
+        }break;
 
         case APP_STATE_SCHEDULE_READ:
-
+        {
             if(APP_StateReset())
             {
                 break;
             }
-
+    
             /* If a read is complete, then schedule a read */
             
             if(appData.isReadComplete == true)
             {
                 appData.isReadComplete = false;
                 appData.readTransferHandle =  USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
-
+    
                 USB_DEVICE_CDC_Read (USB_DEVICE_CDC_INDEX_0,
-                        &appData.readTransferHandle, appData.cdcReadBuffer,
-                        APP_READ_BUFFER_SIZE);
+                                    &appData.readTransferHandle,
+                                    appData.cdcReadBuffer,
+                                    APP_READ_BUFFER_SIZE);
                 
                 if(appData.readTransferHandle == USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID)
                 {
@@ -429,10 +426,10 @@ void APP_Tasks ( void )
                 
                 appData.state = APP_STATE_WAIT_FOR_READ_COMPLETE;
             }
-
-            break;
+        }break;
 
         case APP_STATE_WAIT_FOR_READ_COMPLETE:
+        {
             if(APP_StateReset())
             {
                 break;
@@ -445,23 +442,21 @@ void APP_Tasks ( void )
             {
                 appData.state = APP_STATE_SCHEDULE_WRITE;
             }
-
-            break;
-
+        }break;
 
         case APP_STATE_SCHEDULE_WRITE:
-
+        {
             if(APP_StateReset())
             {
                 break;
             }
-
+    
             /* Setup the write */
-
+    
             appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
             appData.isWriteComplete = false;
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
-
+    
           
             /* Else echo each received character by adding 1 */
             for(int i = 0; i < appData.numBytesRead; i++)
@@ -472,29 +467,28 @@ void APP_Tasks ( void )
                 }
             }
             USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                    &appData.writeTransferHandle,
-                    appData.cdcWriteBuffer, appData.numBytesRead,
-                    USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-            
+                                &appData.writeTransferHandle,
+                                appData.cdcWriteBuffer,
+                                appData.numBytesRead,
+                                USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
 
-            break;
+        }break;
 
         case APP_STATE_WAIT_FOR_WRITE_COMPLETE:
-
+        {
             if(APP_StateReset())
             {
                 break;
             }
-
+    
             /* Check if a character was sent. The isWriteComplete
              * flag gets updated in the CDC event handler */
-
+    
             if(appData.isWriteComplete == true)
             {
                 appData.state = APP_STATE_SCHEDULE_READ;
             }
-
-            break;
+        }break;
 
         case APP_STATE_ERROR:
 
@@ -502,8 +496,24 @@ void APP_Tasks ( void )
         default:
         {
             /* TODO: Handle error in application's state machine. */
-            break;
-        }
+        }break;
+    }
+}
+
+void USB_Transmit(void)
+{
+    if(appData.isWriteComplete == true)
+    {
+        appData.cdcWriteBuffer[0] = 0;
+        appData.cdcWriteBuffer[1] = 1;
+        appData.cdcWriteBuffer[2] = 2;
+        appData.cdcWriteBuffer[3] = 3;
+
+        USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                                &appData.writeTransferHandle,
+                                appData.cdcWriteBuffer,
+                                4,
+                                USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
     }
 }
 

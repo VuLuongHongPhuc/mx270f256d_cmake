@@ -94,12 +94,14 @@ void CLK_Initialize( void )
         /* Nothing to do */
     }
 
-    /* Peripheral Module Disable Configuration */
+    /* p.239 Peripheral Module Disable
+     * p.251 Peripheral Module Disable Configuration
+     * */
 
-    //value |= 0x0001U; /* AD1MD */
+    //value |= 0x0001U; /* AD1MD - use */
     //value |= 0x0100U; /* CTMUMD */
     //value |= 0x1000U; /* CVRMD */
-    PMD1     = 0x1101U;
+    PMD1     = 0x1100U;
 
     //value |= 0x0001U; /* CMP1MD */
     //value |= 0x0002U; /* CMP2MD */
@@ -129,10 +131,10 @@ void CLK_Initialize( void )
     //value |= 0x0000002U; /* U2MD - UART2 */
     //value |= 0x0000100U; /* SPI1MD */
     //value |= 0x0000200U; /* SPI2MD - use */
-    //value |= 0x0010000U; /* I2C1MD */
+    //value |= 0x0010000U; /* I2C1MD - use */
     //value |= 0x0020000U; /* I2C2MD */
     //value |= 0x1000000U; /* USB - use */
-    PMD5     = 0x0030103U;
+    PMD5     = 0x0020103U;
 
     //value |= 0x00001U; /* RTCCMD */
     //value |= 0x00002U; /* REFOMD */

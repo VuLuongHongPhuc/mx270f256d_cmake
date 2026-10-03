@@ -1,14 +1,20 @@
 cmake_minimum_required(VERSION 3.23.1)
 
-file(GLOB_RECURSE DEVICE_SF "${CMAKE_CURRENT_SOURCE_DIR}/ssd1306/*.c")
+# file(GLOB_RECURSE DEVICE_SF "${CMAKE_CURRENT_SOURCE_DIR}/ssd1306/*.c")
+
+# set(DEVICE_SOURCE_FILES
+#         ${DEVICE_SF}
+#         PARENT_SCOPE
+# )
 
 set(DEVICE_SOURCE_FILES
-        ${DEVICE_SF}
+        ${CMAKE_CURRENT_SOURCE_DIR}/ssd1306/ssd1306_i2c.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b/led_ws2812b.c
         PARENT_SCOPE
 )
 
-#set(UTILS_SRC
-#        ${CMAKE_CURRENT_SOURCE_DIR}/stream.c
-#        ${CMAKE_CURRENT_SOURCE_DIR}/convert_to_string.c
-#        PARENT_SCOPE
-#)
+set(DEVICE_INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/ssd1306
+        ${CMAKE_CURRENT_SOURCE_DIR}/ws2812b
+        PARENT_SCOPE
+)

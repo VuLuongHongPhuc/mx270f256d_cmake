@@ -32,7 +32,7 @@ extern "C" {
 #define TSK_ID_USB          (TSK_ID_MONITOR + 1)
 #define TSK_ID_MAX          (TSK_ID_USB + 1)
 
-/* Define priority configMAX_PRIORITIES = 7 */
+/* Define priority configMAX_PRIORITIES = 5 */
 #define PRIORITY_HIGHEST        (configMAX_PRIORITIES - 1)
 #define PRIORITY_NORMAL         (configMAX_PRIORITIES - 2)
 #define PRIORITY_LOWEST         (configMAX_PRIORITIES - 3)
@@ -41,8 +41,8 @@ extern "C" {
 
 /* Tasks priority */
 #define TSK_PRIORITY_MAIN            PRIORITY_NORMAL
-#define TSK_PRIORITY_USB             PRIORITY_HIGHEST
-#define TSK_PRIORITY_MONITOR         PRIORITY_ABOVE_IDLE
+#define TSK_PRIORITY_MONITOR         PRIORITY_LOWEST
+#define TSK_PRIORITY_USB             PRIORITY_ABOVE_IDLE
 #define TSK_PRIORITY_IDLE            PRIORITY_IDLE         /* Idle task */
 
 /* Tasks name for debug */

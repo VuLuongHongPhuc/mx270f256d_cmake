@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include "task_config.h"
 #include "task_monitor.h"
-#include "hardware.h"
+#include "plib_gpio.h"
 
 
 

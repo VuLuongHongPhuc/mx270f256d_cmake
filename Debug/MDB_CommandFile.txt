@@ -1,0 +1,10 @@
+device PIC32MX270F256D
+set AutoSelectMemRanges auto
+set freezeperiphs true
+set hwtoolclock.frcindebug false
+hwtool SNAP
+program mx270f256d_cmake.elf
+reset MCLR
+sleep 1500
+# break main
+run

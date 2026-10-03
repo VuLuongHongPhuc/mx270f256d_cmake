@@ -41,9 +41,9 @@
 *******************************************************************************/
 //DOM-IGNORE-END
 
-#include "plib_gpio.h"
-#include "interrupts.h"
 
+#include "device.h"
+#include "plib_gpio.h"
 
 
 /******************************************************************************
@@ -65,13 +65,32 @@ void GPIO_Initialize ( void )
 
     /* PORTB Initialization */
 
+    /* RB4 pin.33 button SW1*/
+    TRISBbits.TRISB4 = 1;       /* as input */
+    ODCBbits.ODCB4 = 0;         /* as push pull output */
+    CNPUBbits.CNPUB4 = 1;       /* Enable pull-up resistor on RB4 */
+    CNCONBbits.SIDL = 0;        /* Continue operation in Idle mode */
+    CNENBbits.CNIEB4 = 1;       /* CN enable interrupt on RB4 */
+    IFS1CLR = _IFS1_CNBIF_MASK; /* Clear CN interrupt flag */
+    IEC1bits.CNBIE = 1;         /* Enable CN interrupt on RB */
+    IPC8bits.CNIP = 1;          /* CN interrupt priority [1..7] */
+    IPC8bits.CNIS = 1;          /* CN interrupt sub priority [0..3] */
+    CNCONBbits.ON = 1;          /* Enable CN on RB */
+
+    /* RB15 pin.15 output */
+    LATBbits.LATB15 = 0;
+    TRISBbits.TRISB15 = 0;  /* as output */
+    ANSELBbits.ANSB15 = 0;  /* as digital */
+    ODCBbits.ODCB15 = 1;    /* as open drain output */
+
+    /* RB14 pin.14 output */
+    LATBbits.LATB14 = 0;
+    TRISBbits.TRISB14 = 0;  /* as output */
+    ANSELBbits.ANSB14 = 0;  /* as digital */
+    //ODCBbits.ODCB14 = 1;    /* as open drain output */
+
     /* PORTC Initialization */
 
-
-
-    /* PPS Input Remapping */
-
-    /* PPS Output Remapping */
 }
 
 // *****************************************************************************
@@ -213,7 +232,24 @@ void GPIO_PortOutputEnable(GPIO_PORT port, uint32_t mask)
 }
 
 
+void __ISR(_CHANGE_NOTICE_VECTOR, IPL1AUTO) _InterruptCNBHandler(void)
+{
+    if (CNSTATBbits.CNSTATB4 == 1)
+    {        
+        if (PORTBbits.RB4 == 0)
+        {
+            /* SW1 pressed */
+            LATBbits.LATB15 = 1;
+        }
+        else
+        {
+            /* SW1 released */
+            LATBbits.LATB15 = 0;          
+        }
+    }
 
+    IFS1CLR = _IFS1_CNBIF_MASK; /* Clear CN interrupt flag */
+}
 
 /*******************************************************************************
  End of File

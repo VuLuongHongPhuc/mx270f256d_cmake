@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24.2)
 
-# set(CMAKE_VERBOSE_MAKEFILE True)
+set(CMAKE_VERBOSE_MAKEFILE True)
 
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain-pic32mx.cmake)
 
@@ -9,7 +9,7 @@ set(DFP "D:/Program/Microchip/MPLABX/v6.20/packs/Microchip/PIC32MX_DFP/1.5.259")
 set(MCU 32MX270F256D)
 
 project(mx270f256d_cmake C ASM)
-# set(LINKER_FILE ${CMAKE_SOURCE_DIR}/linker/p32MX270F256D.ld)
+set(LINKER_FILE ${CMAKE_SOURCE_DIR}/linker/p32MX270F256D.ld)
 
 
 # Add subdirectories - order matters
@@ -44,29 +44,15 @@ target_link_libraries(${PROJECT_NAME}.elf PRIVATE
 target_include_directories(${PROJECT_NAME}.elf PRIVATE
     ${CMAKE_SOURCE_DIR}/Core/include
     ${CMAKE_SOURCE_DIR}/Utils/include
-    ${CMAKE_SOURCE_DIR}/config/default
-    ${CMAKE_SOURCE_DIR}/config/default/usb
-    ${CMAKE_SOURCE_DIR}/config/default/usb/src
-    ${CMAKE_SOURCE_DIR}/config/default/system
-    ${CMAKE_SOURCE_DIR}/config/default/system/debug
-    ${CMAKE_SOURCE_DIR}/config/default/system/int
-    ${CMAKE_SOURCE_DIR}/config/default/peripheral/clk
-    ${CMAKE_SOURCE_DIR}/config/default/peripheral/evic
-    ${CMAKE_SOURCE_DIR}/config/default/peripheral/gpio
-    ${CMAKE_SOURCE_DIR}/config/default/peripheral/spi/spi_master
-    ${CMAKE_SOURCE_DIR}/config/default/osal
-    ${CMAKE_SOURCE_DIR}/config/default/driver
-    ${CMAKE_SOURCE_DIR}/config/default/driver/usb
-    ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs
-    ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs/src
-    ${CMAKE_SOURCE_DIR}/config/default/driver/usb/usbfs/src/templates
-    ${CMAKE_SOURCE_DIR}/Devices/ssd1306
+    ${CONFIG_HEADER_INCLUDES}
+    ${DEVICE_INCLUDES}
 )
 
 target_compile_options(${PROJECT_NAME}.elf PRIVATE
     -mprocessor=${MCU}
     -O0
     -g
+    -D__DEBUG
     -Wall
     -ffunction-sections
     -fdata-sections
@@ -78,7 +64,9 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
     -mprocessor=${MCU}
     -O0
     -g
-    -Wl,--defsym=_min_heap_size=512
+#    -T${LINKER_FILE}                    # select local linker
+    -Wl,--defsym=_min_heap_size=0       # set minimum heap size to 0 bytes - default 512 bytes
+    -Wl,--defsym=_min_stack_size=512    # set minimum stack size to 512 bytes
     -Wl,--gc-sections
     -Wl,--no-code-in-dinit
     -Wl,--no-dinit-in-serial-mem

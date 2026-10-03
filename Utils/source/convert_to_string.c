@@ -80,42 +80,49 @@ char *u32toa(uint32_t value, char *buf)
 /**
  * @brief Convert float to string with fixed-point at 3
  * @note Use
- *     int32_t value = (int32_t)(floatValue * 1000);
  *     char str[16];
- *     fixed3_to_str(12345, str);   // "12.345"
- *     fixed3_to_str(-9876, str);   // "-9.876"
- *     fixed3_to_str(42, str);      // "0.042"
+ *     fixed3_to_str(12.345f, str);   // "12.345"
+ *     fixed3_to_str(-9.876f, str);   // "-9.876"
+ *     fixed3_to_str(0.042f, str);    // "0.042"
  * @param[in]  value  - Input value to convert
  * @param[out] buf    - Output value string converted
  * @retval - buf pointer
  */
-char *fixed3_to_str(int32_t value, char *buf)
+
+char *fixed3_to_str(float value, char *buf)
 {
     char *p = buf;
 
-    if (value < 0) {
+    if (value < 0) 
+    {
         *p++ = '-';
         value = -value;
     }
 
-    uint32_t integer = value / 1000;
-    uint32_t fraction = value % 1000;
+    uint32_t integer = (uint32_t)value;
+    uint32_t fraction = (uint32_t)(value * 1000) % 1000;
 
     // Integer part
     char tmp[10];
     int n = 0;
 
-    if (integer == 0) {
+    if (integer == 0) 
+    {
         tmp[n++] = '0';
-    } else {
-        while (integer) {
+    }
+    else 
+    {
+        while (integer) 
+        {
             tmp[n++] = '0' + (integer % 10);
             integer /= 10;
         }
     }
 
     while (n--)
+    {
         *p++ = tmp[n];
+    }
 
     // Decimal point
     *p++ = '.';
@@ -133,7 +140,6 @@ char *fixed3_to_str(int32_t value, char *buf)
 
     return buf;
 }
-
 
 /**
  * @brief Convert uint32_t to string

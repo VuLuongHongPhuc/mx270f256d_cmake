@@ -236,6 +236,8 @@ void APP_Initialize ( void );
 
 void APP_Tasks( void );
 
+void USB_Transmit(void);
+
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }

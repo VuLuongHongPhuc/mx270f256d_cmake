@@ -1,36 +1,29 @@
-/**
- * @file convert_to_string.h
- * @brief Convert to string
- * 
- * @author Phuc VU
- * @date Jun 20, 2026
- */
-
-#ifndef __CONVERT_TO_STRING_H_
-#define __CONVERT_TO_STRING_H_
+#ifndef _WS2812_HEADER_H_
+#define _WS2812_HEADER_H_
 
 /********************************* Includes ***************************************/
 #include <stdint.h>
-#include <stdbool.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /********************************* Constants definition ***************************/
+
 /********************************* Macros definition ******************************/
+
 /********************************* Types definition *******************************/
+
 /********************************* Global variable ********************************/
+
 /********************************* API functions prototype ************************/
 
-extern char *u32toa(uint32_t value, char *buf);
+void WS2812B_SendPixel(uint8_t r, uint8_t g, uint8_t b);
 
-extern char *fixed3_to_str(float value, char *buf);
-
-extern void uint32_to_hex(uint32_t value, char *str);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __CONVERT_TO_STRING_H_ */
+#endif /* _WS2812_HEADER_H_ */

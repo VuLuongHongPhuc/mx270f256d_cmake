@@ -16,7 +16,7 @@
 
 #define DEF_DUMMY_DATA  0xffffffff
 
-#define DEF_FIFO_BUFFER_SIZE    4
+#define SPI2_FIFO_SIZE    4
 
 /********************************* Macros definition ******************************/
 
@@ -27,19 +27,66 @@ typedef struct
     uint8_t * txBuf;
     size_t size;
     size_t index;
-}SpiBuffer_t;
+}SpiMemory_t;
 
-static SpiBuffer_t _status = { NULL, 0, 0 };
+static SpiMemory_t _memory = {
+        .txBuf = NULL,
+        .size = 0,
+        .index = 0
+    };
 
 /********************************* Local variable *********************************/
 
 SemaphoreHandle_t _xSemaphore = NULL;
- StaticSemaphore_t _xSemaphoreBuffer;
+StaticSemaphore_t _xSemaphoreBuffer;
 
-/********************************* Local prototypes *******************************/
+/********************************* Local functions ********************************/
 
-static void InitializeGPIO(void);
-static void fillTxBufferFifo(void);
+static void InitializeGPIO()
+{
+    /* SPI SSD1306
+    - SDI  RC6    2 --> MISO
+    - SDO  RC8    4 --> MOSI
+    - SCK1 RB15  15
+    - RST  RB0   21
+    - DC   RB1   22
+    - CS   RB2   23
+    */
+
+    LATBbits.LATB2 = 1;    /* CS */
+    
+    TRISBCLR  = 0x8007;    /* RB0, RB1, RB2, RB15 as output */ 
+    ANSELBCLR = 0x8007;    /* Digital Mode Enable */
+    TRISCCLR = 1 << 8;     /* RC8 as output */
+
+    /* PPS Input Remapping RC6 -> MISO */
+    //SDI2R = 5;
+
+    /* PPS Output Remapping RC8 -> MOSI */
+    RPC8R = 4;
+}
+
+static void FillTxBufferFifo(void)
+{
+    if ((_memory.size == 0) || (_memory.index == _memory.size))
+    {
+        return;
+    }
+
+    int count = SPI2_FIFO_SIZE;
+            
+    do
+    {
+        SPI2BUF = ((uint8_t*)_memory.txBuf)[_memory.index++];
+
+        if (_memory.index == _memory.size)
+        {
+            break;
+        }
+
+        count --;
+    } while (count == 0);
+}
 
 /********************************* API functions prototype ************************/
 
@@ -111,47 +158,23 @@ void SPI2_Initialize(void)
 
     
     /* Initialize Transfer Done interrupt p.69 */
-    IPC9bits.SPI2IP = 1;    /*!< Error, RX, TX priority 0-7 */
-    IPC9bits.SPI2IS = 0;    /*!< Error, RX, TX sub priority 0-3 */
+    IPC9bits.SPI2IP = 1;    /*!< Error, RX, TX priority [1..7] */
+    IPC9bits.SPI2IS = 1;    /*!< Error, RX, TX sub priority [0-3] */
     
     /* Enable Transfer Done Interrupt */
-    //IEC1SET |= _IEC1_SPI2EIE_MASK;    /*!< Enable Error interrupt -> IFS1<18> */
-    //IEC1SET |= _IEC1_SPI2RXIE_MASK;   /*!< Enable RX interrupt    -> IFS1<19> */
-    //IEC1SET |= _IEC1_SPI2TXIE_MASK;   /*!< Enable TX interrupt    -> IFS1<20> */
+    //IEC1SET = _IEC1_SPI2EIE_MASK;    /*!< Enable Error interrupt -> IFS1<18> */
+    //IEC1SET = _IEC1_SPI2RXIE_MASK;   /*!< Enable RX interrupt    -> IFS1<19> */
+    //IEC1SET = _IEC1_SPI2TXIE_MASK;   /*!< Enable TX interrupt    -> IFS1<20> */
 
     /* OVERFLOW */    
-    SPI2CON2bits.IGNROV = 1;// ignore overflow RX
-    SPI2CON2bits.IGNTUR = 1;// ignore overflow TX
+    SPI2CON2bits.IGNROV = 1;    /*!< ignore overflow RX */
+    SPI2CON2bits.IGNTUR = 1;    /*!< ignore overflow TX */
     
-    dummyData = SPI2BUF;          /*!< Read rx buffer to reset flag FIFO */
-    (void)dummyData;              /*!< dummy -> prevent warning at build */
+    dummyData = SPI2BUF;        /*!< Read rx buffer to reset flag FIFO */
+    (void)dummyData;            /*!< dummy -> prevent warning at build */
     
     /* Enable SPI2 */
     SPI2CONSET = _SPI2CON_ON_MASK;
-}
-
-static void InitializeGPIO()
-{
-    /* SPI SSD1306
-    - SDI  RC6    2 --> MISO
-    - SDO  RC8    4 --> MOSI
-    - SCK1 RB15  15
-    - RST  RB0   21
-    - DC   RB1   22
-    - CS   RB2   23
-    */
-
-    LATBbits.LATB2 = 1;    /* CS */
-    
-    TRISBCLR  = 0x8007;    /* RB0, RB1, RB2, RB15 as output */ 
-    ANSELBCLR = 0x8007;    /* Digital Mode Enable */
-    TRISCCLR = 1 << 8;     /* RC8 as output */
-
-    /* PPS Input Remapping RC6 -> MISO */
-    //SDI2R = 5;
-
-    /* PPS Output Remapping RC8 -> MOSI */
-    RPC8R = 4;
 }
 
 bool SPI2_WriteBytes(uint8_t const * const pBuf, size_t size)
@@ -203,16 +226,16 @@ bool SPI2_WriteBytesIT(uint8_t * pBuf, size_t size)
         /* Wait for transmit buffer to be empty */
     }
 
-    _status.index = 0;
-    _status.size = size;
-    _status.txBuf = pBuf;
+    _memory.index = 0;
+    _memory.size = size;
+    _memory.txBuf = pBuf;
 
-    fillTxBufferFifo();
+    FillTxBufferFifo();
 
     /* Clear interrupt flag */
     IFS1CLR = _IFS1_SPI2TXIF_MASK; /* Clear interrupt flag */
     IFS1CLR = _IFS1_SPI2RXIF_MASK; /* Clear interrupt flag */
-    IFS1CLR = _IFS1_SPI2EIF_MASK; /* Clear interrupt flag */
+    IFS1CLR = _IFS1_SPI2EIF_MASK;  /* Clear interrupt flag */
 
     /* Enable transmit interrupt to complete the transfer in ISR context */
     IEC1SET = _IEC1_SPI2TXIE_MASK;
@@ -225,44 +248,6 @@ bool SPI2_WriteBytesIT(uint8_t * pBuf, size_t size)
     return false;
 }
 
-bool SPI2_Busy()
-{
-    if ((SPI2STAT & _SPI2STAT_SRMT_MASK) != 0U)
-    {
-        /* Clear receiver overflow error if any */
-        SPI2STATCLR = _SPI2STAT_SPIROV_MASK;
-
-        /* Disable transmit interrupt */
-        IEC1CLR = _IEC1_SPI2TXIE_MASK;
-
-        return true;
-    }
-    
-    return false;
-}
-
-static void fillTxBufferFifo(void)
-{
-    if ((_status.size == 0) || (_status.index == _status.size))
-    {
-        return;
-    }
-
-    int count = DEF_FIFO_BUFFER_SIZE;
-            
-    do
-    {
-        SPI2BUF = ((uint8_t*)_status.txBuf)[_status.index++];
-
-        if (_status.index == _status.size)
-        {
-            break;
-        }
-
-        count --;
-    } while (count == 0);
-}
-
 void __ISR(_SPI_2_VECTOR, IPL1AUTO) _InterruptSpi2Handler(void)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -272,9 +257,9 @@ void __ISR(_SPI_2_VECTOR, IPL1AUTO) _InterruptSpi2Handler(void)
         SPI2STATCLR = _SPI2STAT_SPIROV_MASK; /* Clear receiver overflow error if any */
 
         /* Send remaining buffer */
-        if (_status.index != _status.size)
+        if (_memory.index != _memory.size)
         {
-            fillTxBufferFifo();
+            FillTxBufferFifo();
         }
         else
         {
@@ -284,7 +269,6 @@ void __ISR(_SPI_2_VECTOR, IPL1AUTO) _InterruptSpi2Handler(void)
         }
     }
 
-    
     IFS1CLR = _IFS1_SPI2TXIF_MASK; /* Clear interrupt flag */
     //IFS1CLR = _IFS1_SPI2RXIF_MASK; /* Clear interrupt flag */
     //IFS1CLR = _IFS1_SPI2EIF_MASK; /* Clear interrupt flag */
